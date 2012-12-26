@@ -37,6 +37,9 @@ public class Util
 	
 	public static String formatCurrency(double value)
 	{
+		if(value == 0.0)
+			return "Free";
+		
 		String result = sCurrencyChar;
 		result += String.format("%.2f", value);
 		
@@ -44,6 +47,40 @@ public class Util
 			result = result.substring(0,result.length()-3);
 		
 		return result;
+	}
+	public static double parseCurrency(String value)
+	{
+		if(value.isEmpty())
+			return 0.0;
+		
+		if(value.equalsIgnoreCase("free"))
+			return 0.0;
+		// There is one char at the beginning that is the currency symbol
+		if(value.startsWith(sCurrencyChar))
+		{
+			try 
+			{ 
+				double val = Double.parseDouble(value.substring(1));
+				return val;
+			} 
+			catch(NumberFormatException e)
+			{
+				return Double.NaN;
+			}
+		}
+		else
+		{
+			// Maybe its just the number
+			try 
+			{ 
+				double val = Double.parseDouble(value);
+				return val;
+			} 
+			catch(NumberFormatException e)
+			{
+				return Double.NaN;
+			}
+		}
 	}
 	
 	public static String formatTimeDifference(long time, int precision, boolean noSingular)
@@ -150,6 +187,89 @@ public class Util
 		}
 		return result.trim();
 	}
+	public static String formatDateDiffShort(long time)
+	{
+		String result = "";
+		long remaining = time;
+		
+		int count = 0;
+		
+		// Years as 365.25 days
+		if(remaining / 31557600000L >= 1)
+		{
+			int years = (int)Math.floor(remaining / 31557600000L);
+			remaining -= years * 31557600000L;
+			count++;
+			
+			result += years + "y";
+		}
+		
+		// Months as 30 days
+		if(remaining / 2592000000L >= 1)
+		{
+			int months = (int)Math.floor(remaining / 2592000000L);
+			remaining -= months * 2592000000L;
+			count++;
+			
+			result += months + "mo";
+		}
+		
+		// Weeks
+		if(remaining / 604800000L >= 1)
+		{
+			int weeks = (int)Math.floor(remaining / 604800000L);
+			remaining -= weeks * 604800000L;
+			count++;
+			
+			result += weeks + "w";
+		}
+		
+		// days
+		if(remaining / 86400000L >= 1)
+		{
+			int days = (int)Math.floor(remaining / 86400000L);
+			remaining -= days * 86400000L;
+			count++;
+			
+			result += days + "d";
+		}
+		
+		// Hours
+		if(remaining / 3600000L >= 1)
+		{
+			int hours = (int)Math.floor(remaining / 3600000L);
+			remaining -= hours * 3600000L;
+			count++;
+			
+			result += hours + "h";
+		}
+		
+		// Minutes
+		if(remaining / 60000L >= 1)
+		{
+			int minutes = (int)Math.floor(remaining / 60000L);
+			remaining -= minutes * 60000L;
+			count++;
+			
+			result += minutes + "m";
+		}
+		
+		// Seconds
+		if(remaining / 1000L >= 1)
+		{
+			int seconds = (int)Math.floor(remaining / 1000L);
+			remaining -= seconds * 1000L;
+			count++;
+			
+			result += seconds + "s";
+		}
+		
+		if(count == 0)
+		{
+			result += "Now";
+		}
+		return result.trim();
+	}
 	public static long parseDateDiff(String dateDiff)
 	{
 		if(dateDiff == null)
@@ -210,10 +330,10 @@ public class Util
 			time += seconds * 1000L;
 			time += minutes * 60000L;
 			time += hours * 3600000L;
-			time += days * 72000000L;
-			time += weeks * 504000000L;
-			time += months * 2191500000L;
-			time += years * 26298000000L;
+			time += days * 86400000L;
+			time += weeks * 604800000L;
+			time += months * 2592000000L;
+			time += years * 31557600000L;
 			
 			if(negative)
 				time *= -1;

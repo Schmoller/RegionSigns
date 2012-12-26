@@ -2,11 +2,20 @@ package au.com.mineauz.RegionSigns;
 
 import org.bukkit.Location;
 
-public class InteractableSignState 
+public abstract class InteractableSignState 
 {
-	public Location SignLocation;
+	private Location mSignLocation;
 	
-	public Object Argument1;
-	public Object Argument2;
-	public Object Argument3;
+	public void load(Location location, String[] signLines) throws Exception
+	{
+		mSignLocation = location;
+	}
+	
+	public Location getLocation()
+	{
+		return mSignLocation;
+	}
+
+	public abstract String[] getValidSignText();
+	
 }

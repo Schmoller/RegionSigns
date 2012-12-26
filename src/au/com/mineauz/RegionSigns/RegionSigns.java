@@ -18,6 +18,9 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import au.com.mineauz.RegionSigns.claim.ClaimSign;
+import au.com.mineauz.RegionSigns.rent.RentSign;
+
 import com.earth2me.essentials.Essentials;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
