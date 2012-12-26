@@ -1,4 +1,4 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import java.util.Calendar;
 import java.util.HashMap;

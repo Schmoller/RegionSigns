@@ -1,9 +1,15 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.World;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
+
+import com.earth2me.essentials.api.Economy;
+import com.earth2me.essentials.api.UserDoesNotExistException;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Util 
 {
@@ -216,6 +222,39 @@ public class Util
 		}
 		
 		return 0;
+	}
+	
+	public static boolean playerHasEnough(Player player, double amount)
+	{
+		try
+		{
+			return Economy.hasEnough(player.getName(), amount);
+		}
+		catch(UserDoesNotExistException e)
+		{
+			return false;
+		}
+	}
+	
+	public static boolean playerSubtractMoney(Player player, double amount)
+	{
+		try
+		{
+			Economy.subtract(player.getName(), amount);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	
+	public static ProtectedRegion getRegion(World world, String regionName)
+	{
+		if(RegionSigns.worldGuard.getRegionManager(world) == null)
+			return null;
+		
+		return RegionSigns.worldGuard.getRegionManager(world).getRegion(regionName);
 	}
 	
 	public static String sCurrencyChar;

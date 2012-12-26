@@ -1,8 +1,9 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
@@ -14,9 +15,8 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.StringPrompt;
 import org.bukkit.entity.Player;
 
-import com.earth2me.essentials.api.Economy;
-import com.earth2me.essentials.api.NoLoanPermittedException;
-import com.earth2me.essentials.api.UserDoesNotExistException;
+import au.com.mineauz.RegionSigns.events.RegionClaimEvent;
+
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -67,27 +67,45 @@ public class ClaimConfirmation implements ConversationAbandonedListener
 						player.sendMessage(ChatColor.RED + "Unable to claim region. It is no longer available to claim");
 					else
 					{
-						// Handle payment
-						if(amount > 0)
+						Sign signState = (Sign)sign.SignLocation.getBlock().getState();
+						
+						String[] lines = signState.getLines();
+						
+						for(int i = 0; i < 4; ++i)
 						{
-							try
-							{
-								// Do the payment
-								Economy.subtract(player.getName(), amount);
-			
-								player.sendMessage(ChatColor.GREEN + "You have purchased " + region.getId() + " for " + Util.formatCurrency(amount));
-							}
-							catch(NoLoanPermittedException e)
-							{
-								// Not possible
-								e.printStackTrace();
-							}
-							catch(UserDoesNotExistException e)
-							{
-								// Not possible
-								e.printStackTrace();
-							}
+							lines[i] = RegionSigns.instance.getConfig().getString("claim.sign.line" + (i+1), "");
+							lines[i] = lines[i].replaceAll("<user>", player.getName());
+							lines[i] = lines[i].replaceAll("<region>", region.getId());
 						}
+						
+						RegionClaimEvent event = new RegionClaimEvent(region, player, amount, lines);
+						
+						// Pre-check
+						if(!Util.playerHasEnough(player, amount))
+						{
+							player.sendMessage(ChatColor.RED + "Unable to claim region. Insufficient funds");
+							return Prompt.END_OF_CONVERSATION;
+						}
+						
+						Bukkit.getPluginManager().callEvent(event);
+						
+						if(event.isCancelled())
+						{
+							player.sendMessage(ChatColor.RED + "Unable to claim region. Your claim was cancelled.");
+							return Prompt.END_OF_CONVERSATION;
+						}
+						
+						amount = event.getPayment();
+						
+						// Handle payment
+						if(!Util.playerSubtractMoney(player, amount))
+						{
+							player.sendMessage(ChatColor.RED + "Unable to claim region. Insufficient funds");
+							return Prompt.END_OF_CONVERSATION;
+						}
+						
+						if(amount > 0)
+							player.sendMessage(ChatColor.GREEN + "You have purchased " + region.getId() + " for " + Util.formatCurrency(amount));
 						else
 							player.sendMessage(ChatColor.GREEN + "You have claimed " + region.getId());
 						
@@ -98,29 +116,9 @@ public class ClaimConfirmation implements ConversationAbandonedListener
 						} catch (ProtectionDatabaseException e) {
 						}
 						
-						
 						// Change the sign text
-						Sign signState = (Sign)sign.SignLocation.getBlock().getState();
-						
-						String line = RegionSigns.instance.getConfig().getString("claim.sign.line1","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(0, line);
-		
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line2","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(1, line);
-						
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line3","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(2, line);
-						
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line4","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(3, line);
+						for(int i = 0; i < 4; i++)
+							signState.setLine(i, event.getSignLines()[i]);
 						
 						signState.update(true);
 					}					

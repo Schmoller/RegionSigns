@@ -1,4 +1,4 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -56,6 +56,8 @@ public abstract class InteractableSign
 
 	// Allows you to alter the text on the sign afterwards
 	protected abstract void replaceSign(InteractableSignState state, boolean valid, String[] lines);
+	
+	protected abstract void onSignCreated(InteractableSignState state);
 
 	// This is what goes in the "[Type]"
 	protected String mSignTypeName;
@@ -237,6 +239,8 @@ public abstract class InteractableSign
 				
 				for(int i = 0; i < 4; i++)
 					event.setLine(i,lines[i]);
+				
+				onSignCreated(state);
 			}
 		}
 	}

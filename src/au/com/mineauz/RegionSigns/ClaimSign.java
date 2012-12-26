@@ -1,9 +1,12 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+
+import au.com.mineauz.RegionSigns.events.ClaimSignCreateEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -257,5 +260,20 @@ public class ClaimSign extends InteractableSign
 				}
 			}
 		}
+	}
+	
+	@Override
+	protected void onSignCreated( InteractableSignState state )
+	{
+		ProtectedRegion region = Util.getRegion(state.SignLocation.getWorld(), (String)state.Argument1);
+		double amount = (Double)state.Argument3;
+		
+		if(region == null)
+			return;
+		
+		ClaimSignCreateEvent event = new ClaimSignCreateEvent(region, amount);
+		
+		Bukkit.getPluginManager().callEvent(event);
+		
 	}
 }

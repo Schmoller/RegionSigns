@@ -1,4 +1,4 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import java.io.File;
 import java.io.FileOutputStream;

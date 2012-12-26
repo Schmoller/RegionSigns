@@ -1,4 +1,4 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import org.bukkit.permissions.Permission;
 

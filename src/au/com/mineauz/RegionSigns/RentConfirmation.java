@@ -1,9 +1,10 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
@@ -15,8 +16,9 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.StringPrompt;
 import org.bukkit.entity.Player;
 
+import au.com.mineauz.RegionSigns.events.RegionRentEvent;
+
 import com.earth2me.essentials.api.Economy;
-import com.earth2me.essentials.api.NoLoanPermittedException;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -73,24 +75,37 @@ public class RentConfirmation implements ConversationAbandonedListener
 						player.sendMessage(ChatColor.RED + "Unable to rent region. It is no longer available for rent");
 					else
 					{
-						// Handle payment
-						if(downPayment > 0)
+						Sign signState = (Sign)sign.SignLocation.getBlock().getState();
+						
+						String[] lines = new String[4];
+						
+						for(int i = 0; i < 4; ++i)
 						{
-							try
-							{
-								// Do the payment
-								Economy.subtract(player.getName(), downPayment);
-							}
-							catch(NoLoanPermittedException e)
-							{
-								// Not possible
-								e.printStackTrace();
-							}
-							catch(UserDoesNotExistException e)
-							{
-								// Not possible
-								e.printStackTrace();
-							}
+							lines[i] = RegionSigns.instance.getConfig().getString("rent.sign.line" + (i+1), "");
+							lines[i] = lines[i].replaceAll("<user>", player.getName());
+							lines[i] = lines[i].replaceAll("<region>", region.getId());
+						}
+						
+						RegionRentEvent event = new RegionRentEvent(region, player, downPayment, lines);
+						
+						if (!Util.playerHasEnough(player, downPayment))
+						{
+							player.sendMessage(ChatColor.RED + "Unable to rent region. Insufficient Funds.");
+							return Prompt.END_OF_CONVERSATION;
+						}
+						
+						Bukkit.getPluginManager().callEvent(event);
+						
+						if(event.isCancelled())
+						{
+							player.sendMessage(ChatColor.RED + "Unable to rent region. Your request was denied.");
+							return Prompt.END_OF_CONVERSATION;
+						}
+
+						if(!Util.playerSubtractMoney(player, downPayment))
+						{
+							player.sendMessage(ChatColor.RED + "Unable to rent region. Insufficient Funds.");
+							return Prompt.END_OF_CONVERSATION;
 						}
 					
 						RentMessage beginMessage = new RentMessage();
@@ -148,27 +163,8 @@ public class RentConfirmation implements ConversationAbandonedListener
 						}
 						
 						// Change the sign text
-						Sign signState = (Sign)sign.SignLocation.getBlock().getState();
-						
-						String line = RegionSigns.instance.getConfig().getString("claim.sign.line1","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(0, line);
-	
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line2","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(1, line);
-						
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line3","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(2, line);
-						
-						line = RegionSigns.instance.getConfig().getString("claim.sign.line4","");
-						line = line.replaceAll("<user>", player.getName());
-						line = line.replaceAll("<region>", region.getId());
-						signState.setLine(3, line);
+						for(int i = 0; i < 4; ++i)
+							signState.setLine(i, event.getSignLines()[i]);
 						
 						signState.update(true);
 					}

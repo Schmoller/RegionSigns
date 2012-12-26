@@ -1,9 +1,12 @@
-package com.gmail.steven.schmoll.RegionSigns;
+package au.com.mineauz.RegionSigns;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+
+import au.com.mineauz.RegionSigns.events.RentSignCreateEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -423,5 +426,84 @@ public class RentSign extends InteractableSign
 				}
 			}
 		}
+	}
+	
+	@Override
+	protected void onSignCreated( InteractableSignState state )
+	{
+		ProtectedRegion region = Util.getRegion(state.SignLocation.getWorld(), (String)state.Argument1);
+		double downPayment = (Double)state.Argument2;
+		
+		double intervalPayment = 0;
+		long intervalLength = 0;
+		
+		// Parse the cost per period and the period length
+		if(((String)state.Argument3).indexOf(":") != -1)
+		{
+			// This does contain the period
+			String perIntervalPriceString = ((String)state.Argument3).substring(0,((String)state.Argument3).indexOf(":"));
+			String intervalLengthString = ((String)state.Argument3).substring(((String)state.Argument3).indexOf(":")+1);
+			
+			// There is one char at the beginning that is the currency symbol
+			if(perIntervalPriceString.startsWith(Util.sCurrencyChar))
+			{
+				try 
+				{ 
+					intervalPayment = Double.parseDouble(perIntervalPriceString.substring(1));
+				} 
+				catch(NumberFormatException e){}
+			}
+			else
+			{
+				// Maybe its just the number
+				try 
+				{ 
+					intervalPayment = Double.parseDouble(perIntervalPriceString);
+				} 
+				catch(NumberFormatException e){}
+			}
+			
+			// attempt to parse the period
+			try
+			{
+				intervalLength = Util.parseDateDiff(intervalLengthString);
+			}
+			catch(Exception e){}
+		}
+		else
+		{
+			// Just the cost
+			// There is one char at the beginning that is the currency symbol
+			if(((String)state.Argument3).startsWith(Util.sCurrencyChar))
+			{
+				try 
+				{ 
+					intervalPayment = Double.parseDouble(((String)state.Argument3).substring(1));
+				} 
+				catch(NumberFormatException e){}
+			}
+			else
+			{
+				// Maybe its just the number
+				try 
+				{ 
+					intervalPayment = Double.parseDouble(((String)state.Argument3));
+				} 
+				catch(NumberFormatException e){}
+			}
+			
+			try
+			{
+				intervalLength = Util.parseDateDiff(RegionSigns.instance.getConfig().getString("rent.defaultperiod"));
+			}
+			catch(Exception e){}
+		}
+		
+		if(region == null)
+			return;
+		
+		RentSignCreateEvent event = new RentSignCreateEvent(region, downPayment, intervalPayment, intervalLength);
+		
+		Bukkit.getPluginManager().callEvent(event);
 	}
 }
