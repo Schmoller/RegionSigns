@@ -78,7 +78,7 @@ public class ClaimConfirmation implements ConversationAbandonedListener
 							lines[i] = lines[i].replaceAll("<region>", region.getId());
 						}
 						
-						RegionClaimEvent event = new RegionClaimEvent(region, player, amount, lines);
+						RegionClaimEvent event = new RegionClaimEvent(region, sign.SignLocation.clone(), player, amount, lines);
 						
 						// Pre-check
 						if(!Util.playerHasEnough(player, amount))

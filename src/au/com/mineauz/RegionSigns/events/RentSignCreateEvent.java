@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.event.HandlerList;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -23,9 +24,9 @@ public class RentSignCreateEvent extends RegionSignCreateEvent
 	private double mIntervalPrice;
 	private long mIntervalLength;
 	
-	public RentSignCreateEvent(ProtectedRegion region, double initialPrice, double intervalPrice, long intervalLength)
+	public RentSignCreateEvent(ProtectedRegion region, Location signLocation, double initialPrice, double intervalPrice, long intervalLength)
 	{
-		super(region);
+		super(region, signLocation);
 		
 		mInitialPrice = initialPrice;
 		

@@ -86,7 +86,7 @@ public class RentConfirmation implements ConversationAbandonedListener
 							lines[i] = lines[i].replaceAll("<region>", region.getId());
 						}
 						
-						RegionRentEvent event = new RegionRentEvent(region, player, downPayment, lines);
+						RegionRentEvent event = new RegionRentEvent(region, sign.SignLocation.clone(), player, downPayment, lines);
 						
 						if (!Util.playerHasEnough(player, downPayment))
 						{

@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.event.HandlerList;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -21,9 +22,9 @@ public class RegionSignDestroyEvent extends RegionEvent
 	
 	// Event specific stuff:
 
-	public RegionSignDestroyEvent( ProtectedRegion region )
+	public RegionSignDestroyEvent( ProtectedRegion region, Location signLocation )
 	{
-		super(region);
+		super(region, signLocation);
 	}
 
 }

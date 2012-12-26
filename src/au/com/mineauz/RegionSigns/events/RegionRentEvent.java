@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -29,9 +30,9 @@ public class RegionRentEvent extends RegionEvent implements Cancellable
 	private double mAmount;
 	private String[] mSignText;
 	
-	public RegionRentEvent(ProtectedRegion region, Player renter, double payment, String[] signText)
+	public RegionRentEvent(ProtectedRegion region, Location signLocation, Player renter, double payment, String[] signText)
 	{
-		super(region);
+		super(region, signLocation);
 		
 		mRenter = renter;
 		mAmount = payment;

@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -15,10 +16,12 @@ public abstract class RegionEvent extends Event
 	}
 
 	private ProtectedRegion mRegion;
+	private Location mLocation;
 	
-	public RegionEvent(ProtectedRegion region)
+	public RegionEvent(ProtectedRegion region, Location signLocation)
 	{
 		mRegion = region;
+		mLocation = signLocation;
 	}
 	
 	/**
@@ -27,5 +30,13 @@ public abstract class RegionEvent extends Event
 	public ProtectedRegion getRegion()
 	{
 		return mRegion;
+	}
+	
+	/**
+	 * Gets the location of the sign
+	 */
+	public Location getLocation()
+	{
+		return mLocation;
 	}
 }

@@ -272,7 +272,7 @@ public class ClaimSign extends InteractableSign
 		if(region == null)
 			return;
 		
-		ClaimSignCreateEvent event = new ClaimSignCreateEvent(region, amount);
+		ClaimSignCreateEvent event = new ClaimSignCreateEvent(region, state.SignLocation.clone(), amount);
 		
 		Bukkit.getPluginManager().callEvent(event);
 		
@@ -286,7 +286,7 @@ public class ClaimSign extends InteractableSign
 		if(region == null)
 			return;
 		
-		ClaimSignDestroyEvent event = new ClaimSignDestroyEvent(region);
+		ClaimSignDestroyEvent event = new ClaimSignDestroyEvent(region, state.SignLocation.clone());
 		
 		Bukkit.getPluginManager().callEvent(event);
 	}

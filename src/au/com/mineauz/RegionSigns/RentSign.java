@@ -503,7 +503,7 @@ public class RentSign extends InteractableSign
 		if(region == null)
 			return;
 		
-		RentSignCreateEvent event = new RentSignCreateEvent(region, downPayment, intervalPayment, intervalLength);
+		RentSignCreateEvent event = new RentSignCreateEvent(region, state.SignLocation.clone(), downPayment, intervalPayment, intervalLength);
 		
 		Bukkit.getPluginManager().callEvent(event);
 	}
@@ -516,7 +516,7 @@ public class RentSign extends InteractableSign
 		if(region == null)
 			return;
 		
-		RentSignDestroyEvent event = new RentSignDestroyEvent(region);
+		RentSignDestroyEvent event = new RentSignDestroyEvent(region, state.SignLocation.clone());
 		
 		Bukkit.getPluginManager().callEvent(event);
 	}

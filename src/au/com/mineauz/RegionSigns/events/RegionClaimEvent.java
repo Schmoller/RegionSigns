@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -29,9 +30,9 @@ public class RegionClaimEvent extends RegionEvent implements Cancellable
 	private Player mClaimer;
 	private String[] mSignText;
 	
-	public RegionClaimEvent(ProtectedRegion region, Player claimer, double amount, String[] signText)
+	public RegionClaimEvent(ProtectedRegion region, Location signLocation, Player claimer, double amount, String[] signText)
 	{
-		super(region);
+		super(region, signLocation);
 		mClaimer = claimer;
 		mSignText = signText;
 		mAmount = amount;

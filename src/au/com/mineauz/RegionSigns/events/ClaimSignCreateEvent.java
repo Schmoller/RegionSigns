@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.events;
 
+import org.bukkit.Location;
 import org.bukkit.event.HandlerList;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -22,9 +23,9 @@ public class ClaimSignCreateEvent extends RegionSignCreateEvent
 	
 	private double mPrice;
 	
-	public ClaimSignCreateEvent(ProtectedRegion region, double price)
+	public ClaimSignCreateEvent(ProtectedRegion region, Location signLocation, double price)
 	{
-		super(region);
+		super(region, signLocation);
 		mPrice = price;
 	}
 	
