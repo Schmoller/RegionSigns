@@ -1,0 +1,116 @@
+name: RegionSigns
+version: 1.0.3
+main: com.gmail.steven.schmoll.RegionSigns.RegionSigns
+
+author: Schmoller
+
+description: Provides 2 interactive signs for claiming and renting regions
+
+depends: [WorldGuard,Essentials]
+
+commands:
+  rent:
+    usage: /<command> help | stop | list | info | forcestop | transfer | set
+    
+permissions:
+  regionsigns.*:
+    default: op
+    children:
+      regionsigns.create.claim: true
+      regionsigns.create.rent: true
+      regionsigns.use.claim: true
+      regionsigns.use.rent: true
+      regionsigns.rent.stop.others: true
+      regionsigns.rent.info.others: true
+      regionsigns.rent.list.*: true
+      regionsigns.use.nolimit: true
+      regionsigns.use.norestrict: true
+      regionsigns.config.reload: true
+      regionsigns.rent.nominperiod: true
+  
+  regionsigns.create.claim:
+    description: Allow the player to create a claim sign
+    default: op
+  regionsigns.create.claim.ownparent:
+    description: Restricts the player to only create a claim sign if they own the parent of the region they specify
+    default: false
+    children:
+      regionsigns.create.claim: true
+      
+  regionsigns.use.claim:
+    description: Allow the player to use a claim sign
+    default: true
+  
+  regionsigns.use.nolimit:
+    description: Allows the player to claim/rent more regions than set in the config
+    default: op
+  
+  regionsigns.use.norestrict:
+    description: Allows the player to claim/rent regions in all restricted regions
+    default: op
+  
+  regionsigns.create.rent:
+    description: Allow the player to create rent signs
+    default: op
+    
+  regionsigns.create.rent.ownregion:
+    description: Restricts a player to renting out regions that they own
+    default: false
+    children:
+      regionsigns.create.rent: true
+
+  regionsigns.use.rent:
+    description: Allow the player to use rent signs and "/rent help"
+    default: true
+  
+  regionsigns.rent.stop.others:
+    description: Allows the player to make other players stop renting a region. When using this, the command is /rent stop <region> <player> to prevent accidents
+    default: op
+
+  regionsigns.rent.info.others:
+    description: Allows the player to view information on a region rented by another player
+    default: op
+    
+  regionsigns.rent.forcestop:
+    description: Allows the player to immediately terminate a lease using /rent forcestop. No final payment will be made, and it will be removed from their name. It is not recommended to give normal players this command
+    default: op
+  
+  regionsigns.rent.forcestop.others:
+    description: Allows the player to immediately terminate another players lease using /rent forcestop. No final payment will be made, and it will be removed from their name. It is not recommended to give normal players this command
+    default: op
+    children:
+      regionsigns.rent.forcestop: true
+   
+  regionsigns.rent.list.*:
+    description: Allows the player to use all list functions
+    default: op
+    children:
+      regionsigns.rent.list.all: true
+      regionsigns.rent.list.others: true
+      regionsigns.rent.list.me: true
+  
+  regionsigns.rent.list.all:
+    description: Allows the player to use "/rent list all" without specifying a player
+    default: op
+  regionsigns.rent.list.others:
+    description: Allows the player to use "/rent list .<player>"
+    default: op
+  regionsigns.rent.list.me:
+    description: Allows the player to list all regions rented by them. "/rent list me"
+    default: true
+  
+  regionsigns.rent.set:
+    description: Allows the player to change the amount of rent the tenant has to pay for a particular lease
+    default: op
+    
+  regionsigns.rent.transfer:
+    description: Allows the player to transfer tenantship of a lease 
+    default: op
+  
+  regionsigns.config.reload:
+    description: Allows the player to reload the regionsigns config file
+    default: op
+
+  regionsigns.rent.nominperiod:
+    description: Allows a player to be exempt from the minimum rent period
+    default: op

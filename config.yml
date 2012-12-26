@@ -1,0 +1,156 @@
+# You can place custom restrictions that apply to both claimable and rentable regions here
+restrictions:
+  ## This is a region name. It will affect all claimable/rentable regions that are children of this region
+  ## The permission to claim/rent a region with this region as the parent will be "regionsigns.any.mytown"
+  ## Because the world name is not specified, this will default to the overworld
+  # mytown:
+    ## Players without that permission will be shown this message when they try to acquire a region
+    # message: "You must be an unranked player to acquire this region"
+    ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+    # default: true 
+  ## This is the same as the example above but it specifies the world that the region is in
+  ## The permission to claim/rent a region with this region as the parent will be "regionsigns.any.world_nether-mytown"
+  # world_nether-mytown:
+    ## Players without that permission will be shown this message when they try to acquire a region
+    # message: "You must be an unranked player to acquire this region"
+    ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+    # default: true
+
+# The maximum number of regions a user can claim and rent overall. Setting to 0 means no max.
+# This is enforced strictly and neither claim.overallmax or rent.overallmax can override this
+globalmax: 5
+  
+# The maximum number of regions a user can claim and rent that have the same parent region. Setting to 0 means no max
+# This is enforced strictly and neither claim.childmax or rent.childmax can override this
+globalchildmax: 1
+
+claim:
+  # The format of the sign after it has been claimed
+  # There are 2 tags you can use in the text
+  # - <user> which is replaced with the players name
+  # - <region> which is replaced with the regions name
+  sign:
+    line1: <user>
+    line2: 
+    line3: <region>
+    line4:
+    
+  # The maximum price that you can put on a sign. Setting to 0 means no maximum price
+  max-price: 0
+  
+  # The maximum number of regions a user can claim overall. Setting to 0 means no max
+  overallmax: 5
+  
+  # The maximum number of regions a user can claim that have the same parent region. Setting to 0 means no max
+  childmax: 1
+  
+  # You can place custom restrictions on claimable regions here
+  restrictions:
+    ## This is a region name. It will affect all claimable regions that are children of this region
+    ## The permission to claim a region with this region as the parent will be "regionsigns.claim.mytown"
+    ## Because the world name is not specified, this will default to the overworld
+    # mytown:
+      ## Players without that permission will be shown this message when they try to claim a region
+      # message: "You must be an unranked player to claim this region"
+      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+      # default: true 
+    ## This is the same as the example above but it specifies the world that the region is in
+    ## The permission to claim a region with this region as the parent will be "regionsigns.claim.world_nether-mytown"
+    # world_nether-mytown:
+      ## Players without that permission will be shown this message when they try to claim a region
+      # message: "You must be an unranked player to claim this region"
+      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+      # default: true
+rent:
+  # The default payment interval
+  defaultperiod: 1w
+  
+  # The minimum time somebody can rent for
+  # Set to 0 for no minimum period
+  minperiod: 2w
+  
+  # The number of ticks between checks for rent collection etc. Default is 1200 = 1 Minute
+  check-interval: 1200
+  
+  # The autosave frequency in ticks for the rent system. Default is 6000 = 5 Minutes
+  autosave-interval: 6000
+  
+  # The maximum upfront payment that can be requested. Setting to 0 means no maximum price
+  max-price-upfront: 0
+  
+  # The maximum per interval payment that can be requested. Setting to 0 means no maximum price
+  max-price-interval: 0
+  
+  # The maximum number of regions a user can rent overall. Setting to 0 means no max
+  overallmax: 5
+  
+  # The maximum number of regions a user can rent that have the same parent region. Setting to 0 means no max
+  childmax: 1
+  
+  # The format of the sign after it has been claimed
+  # There are 2 tags you can use in the text
+  # - <user> which is replaced with the players name
+  # - <region> which is replaced with the regions name
+  sign:
+    line1: <user>
+    line2:
+    line3: <region>
+    line4:
+  
+  # You can place custom restrictions on rentable regions here
+  restrictions:
+    ## This is a region name. It will affect all rentable regions that are children of this region
+    ## The permission to rent a region with this region as the parent will be "regionsigns.rent.mytown"
+    ## Because the world name is not specified, this will default to the overworld
+    # mytown:
+      ## Players without that permission will be shown this message when they try to rent a region
+      # message: "You must be a regular player to rent this region"
+      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+      # default: true 
+    ## This is the same as the example above but it specifies the world that the region is in
+    ## The permission to claim a region with this region as the parent will be "regionsigns.rent.world_nether-mytown"
+    # world_nether-mytown:
+      ## Players without that permission will be shown this message when they try to rent a region
+      # message: "You must be a regular player to rent this region"
+      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
+      # default: true
+  
+  # Here you can customise the messages that are shown to players
+  # Most messages can contain these 3 tags:
+  # - <region> : the name of the region they are renting
+  # - <time> : a time given to the message
+  # - <payment> : a currency given to the message
+  messages:
+    # This is the prefix of all messages
+    prefix: "&a[Rent]&f "
+    
+    # This message is shown when a player begins renting a region
+    begin: "You have started renting &e'<region>'&f. &c<payment>&f was spent."
+    
+    # This message is shown when a player begins renting a region that doesnt cost anything to start
+    begin-free: "You have started renting &e'<region>'&f."
+    
+    # This message is shown after you have begun renting a region
+    first-payment: "The first payment of &c<payment>&f will be deducted in &e<time>&f."
+    
+    # This message is shown when a player finishes renting a region
+    finished: "You have finished renting &e'<region>'&f. Please contact an Admin or Mod to retrieve any remaining possessions."
+    
+    # This message is shown when a player terminates their, or someone elses, lease
+    terminate: "You have stopped renting &e'<region>'&f. A final payment of &c<payment>&f was sent. You have &e<time>&f to move out."
+    
+    # This message is shown when a player sends payment for rent
+    payment: "&c<payment>&f has been paid for &e'<region>'&f." 
+    
+    # This message is shown after payment of rent, showing the next time of rent collection
+    next-payment: "The next payment will be deducted in &e<time>&f."
+    
+    # This message is shown after payment of rent, if a player does not have enough money for the next payment
+    warning-funds: "&6Warning: You currently have insufficient funds to pay your next rent"
+    
+    # This message is shown if a player is unable to pay rent
+    warning-evict: "&6Warning: You will be evicted from &e'<region>'&6 if payment is not received in &e<time>&6."
+    
+    # This message is shown if a player is evicted from a region
+    evicted: "&cYou have been evicted from &e'<region>'.&c Please contact an Admin or Mod to retrieve any remaining possessions."
+    
