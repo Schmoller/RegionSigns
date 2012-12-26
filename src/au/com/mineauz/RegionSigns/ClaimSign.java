@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import au.com.mineauz.RegionSigns.events.ClaimSignCreateEvent;
+import au.com.mineauz.RegionSigns.events.ClaimSignDestroyEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -275,5 +276,18 @@ public class ClaimSign extends InteractableSign
 		
 		Bukkit.getPluginManager().callEvent(event);
 		
+	}
+	
+	@Override
+	protected void onSignDestroyed( InteractableSignState state )
+	{
+		ProtectedRegion region = Util.getRegion(state.SignLocation.getWorld(), (String)state.Argument1);
+		
+		if(region == null)
+			return;
+		
+		ClaimSignDestroyEvent event = new ClaimSignDestroyEvent(region);
+		
+		Bukkit.getPluginManager().callEvent(event);
 	}
 }

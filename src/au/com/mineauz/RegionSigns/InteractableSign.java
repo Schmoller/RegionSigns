@@ -58,6 +58,8 @@ public abstract class InteractableSign
 	protected abstract void replaceSign(InteractableSignState state, boolean valid, String[] lines);
 	
 	protected abstract void onSignCreated(InteractableSignState state);
+	
+	protected abstract void onSignDestroyed(InteractableSignState state);
 
 	// This is what goes in the "[Type]"
 	protected String mSignTypeName;
@@ -246,16 +248,27 @@ public abstract class InteractableSign
 	}
 	private boolean processBlockBreak(BlockBreakEvent event)
 	{
-		// They can create the signs, then they can destroy them
-		if(event.getPlayer().hasPermission(mCreatePermission) || mCreatePermission.isEmpty())
-			return false;
-		
 		if(event.getBlock().getType() == Material.SIGN_POST || event.getBlock().getType() == Material.WALL_SIGN)
 		{
 			// Check the first line
 			if(((Sign)event.getBlock().getState()).getLines()[0].compareToIgnoreCase(ChatColor.DARK_BLUE + "[" + mSignTypeName + "]") == 0)
 			{
 				// It is one
+				// They can create the signs, then they can destroy them
+				if(event.getPlayer().hasPermission(mCreatePermission) || mCreatePermission.isEmpty())
+				{
+					// Build a state
+					InteractableSignState state = new InteractableSignState();
+					Sign sign = (Sign)event.getBlock().getState();
+					
+					state.SignLocation = sign.getLocation();
+					state.Argument1 = ParseArgument(sign.getLines()[1],Argument1Type,Argument1Required,Argument1Default);
+					state.Argument2 = ParseArgument(sign.getLines()[2],Argument2Type,Argument2Required,Argument2Default);
+					state.Argument3 = ParseArgument(sign.getLines()[3],Argument3Type,Argument3Required,Argument3Default);
+					
+					onSignDestroyed(state);
+					return false;
+				}
 				event.setCancelled(true);
 				return true;
 			}
@@ -272,6 +285,23 @@ public abstract class InteractableSign
 					if(((Sign)block.getState()).getLines()[0].compareToIgnoreCase(ChatColor.DARK_BLUE + "[" + mSignTypeName + "]") == 0)
 					{
 						// It is one
+						
+						// They can create the signs, then they can destroy them
+						if(event.getPlayer().hasPermission(mCreatePermission) || mCreatePermission.isEmpty())
+						{
+							// Build a state
+							InteractableSignState state = new InteractableSignState();
+							Sign sign = (Sign)block.getState();
+							
+							state.SignLocation = sign.getLocation();
+							state.Argument1 = ParseArgument(sign.getLines()[1],Argument1Type,Argument1Required,Argument1Default);
+							state.Argument2 = ParseArgument(sign.getLines()[2],Argument2Type,Argument2Required,Argument2Default);
+							state.Argument3 = ParseArgument(sign.getLines()[3],Argument3Type,Argument3Required,Argument3Default);
+							
+							onSignDestroyed(state);
+							return false;
+						}
+						
 						event.setCancelled(true);
 						return true;
 					}

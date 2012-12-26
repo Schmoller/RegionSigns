@@ -36,7 +36,7 @@ public class RentSignCreateEvent extends RegionSignCreateEvent
 	/**
 	 * Gets the price to be payed initially
 	 */
-	public double getIntitialPrice()
+	public double getInitialPrice()
 	{
 		return mInitialPrice;
 	}

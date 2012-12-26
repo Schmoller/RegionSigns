@@ -7,6 +7,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import au.com.mineauz.RegionSigns.events.RentSignCreateEvent;
+import au.com.mineauz.RegionSigns.events.RentSignDestroyEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -503,6 +504,19 @@ public class RentSign extends InteractableSign
 			return;
 		
 		RentSignCreateEvent event = new RentSignCreateEvent(region, downPayment, intervalPayment, intervalLength);
+		
+		Bukkit.getPluginManager().callEvent(event);
+	}
+	
+	@Override
+	protected void onSignDestroyed( InteractableSignState state )
+	{
+		ProtectedRegion region = Util.getRegion(state.SignLocation.getWorld(), (String)state.Argument1);
+		
+		if(region == null)
+			return;
+		
+		RentSignDestroyEvent event = new RentSignDestroyEvent(region);
 		
 		Bukkit.getPluginManager().callEvent(event);
 	}
