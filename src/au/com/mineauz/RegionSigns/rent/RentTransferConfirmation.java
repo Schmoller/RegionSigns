@@ -1,4 +1,4 @@
-package au.com.mineauz.RegionSigns;
+package au.com.mineauz.RegionSigns.rent;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -12,6 +12,9 @@ import org.bukkit.conversations.ConversationFactory;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.StringPrompt;
 import org.bukkit.entity.Player;
+
+import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Util;
 
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
@@ -47,7 +50,7 @@ public class RentTransferConfirmation
 						"You will be required to pay the rent of " + ChatColor.YELLOW + Util.formatCurrency(rent.IntervalPayment) + ChatColor.WHITE + 
 						" every " + ChatColor.YELLOW + Util.formatTimeDifference(rent.RentInterval, 2, true) + ChatColor.WHITE + " with your first payment due in " + 
 						ChatColor.YELLOW + Util.formatTimeDifference(rent.NextIntervalEnd - Calendar.getInstance().getTimeInMillis(), 2, false) + ChatColor.WHITE +
-						(RentSystem.MinimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - rent.Date < RentSystem.MinimumRentPeriod) ? " and are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentSystem.MinimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - rent.Date), 2, true) + ChatColor.WHITE : "" ) +
+						(RentManager.MinimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - rent.Date < RentManager.MinimumRentPeriod) ? " and are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentManager.MinimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - rent.Date), 2, true) + ChatColor.WHITE : "" ) +
 						".\nDo you wish to accept? (Type yes or no)";
 				}
 			}
@@ -104,9 +107,9 @@ public class RentTransferConfirmation
 					}
 					
 					// Transfer the actual region
-					region.getMembers().removePlayer(rent.Tenant);
+					region.getMembers().removePlayer(rent.Tenant.getName());
 					region.getMembers().addPlayer(newTenant.getName());
-					rent.Tenant = newTenant.getName();
+					rent.Tenant = newTenant;
 					
 					// Attempt to save
 					try 
@@ -121,8 +124,6 @@ public class RentTransferConfirmation
 						newTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
 						return Prompt.END_OF_CONVERSATION;
 					}
-					
-					RegionSigns.instance.getRentSystem().SaveRenters();
 					
 					requester.sendMessage(rent.Region + " has now been transfered to " + ((Player)context.getSessionData("new")).getName());
 					newTenant.sendMessage("You are now the tenant of " + rent.Region);

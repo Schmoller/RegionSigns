@@ -15,10 +15,6 @@ import au.com.mineauz.RegionSigns.Confirmation;
 import au.com.mineauz.RegionSigns.InteractableSign;
 import au.com.mineauz.RegionSigns.InteractableSignState;
 import au.com.mineauz.RegionSigns.RegionSigns;
-import au.com.mineauz.RegionSigns.RentMessage;
-import au.com.mineauz.RegionSigns.RentMessageTypes;
-import au.com.mineauz.RegionSigns.RentStatus;
-import au.com.mineauz.RegionSigns.RentSystem;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.events.RegionRentEvent;
 import au.com.mineauz.RegionSigns.events.RentSignCreateEvent;
@@ -109,12 +105,10 @@ public class RentSign extends InteractableSign
 					firstPaymentMessage.EventCompletionTime = Calendar.getInstance().getTimeInMillis() + mState.getIntervalLength();
 					firstPaymentMessage.Type = RentMessageTypes.FirstPaymentTime;
 					
-					mPlayer.sendMessage(RegionSigns.instance.getRentSystem().getDisplayMessage(beginMessage));
+					RentManager.instance.sendMessage(beginMessage, mPlayer);
 					
 					if(mState.getIntervalPrice() > 0)
-					{
-						mPlayer.sendMessage(RegionSigns.instance.getRentSystem().getDisplayMessage(firstPaymentMessage));
-					}
+						RentManager.instance.sendMessage(firstPaymentMessage, mPlayer);
 					
 					mPlayer.sendMessage(ChatColor.GREEN + "[Rent] " + ChatColor.WHITE + "Use '/rent help' for a list of rent commands");
 					
@@ -127,20 +121,21 @@ public class RentSign extends InteractableSign
 						warning.EventCompletionTime = Calendar.getInstance().getTimeInMillis() + mState.getIntervalLength();
 						warning.Type = RentMessageTypes.InsufficientFunds;
 						
-						mPlayer.sendMessage(RegionSigns.instance.getRentSystem().getDisplayMessage(warning));
+						RentManager.instance.sendMessage(warning, mPlayer);
 					}
 					
 					RentStatus status = new RentStatus();
 					status.Region = mState.getRegion().getId();
 					status.World = mState.getLocation().getWorld().getName();
-					status.Tenant = mPlayer.getName();
+					status.Tenant = mPlayer;
 					status.IntervalPayment = mState.getIntervalPrice();
 					status.RentInterval = mState.getIntervalLength();
 					status.NextIntervalEnd = Calendar.getInstance().getTimeInMillis() + mState.getIntervalLength();
 					status.Date = Calendar.getInstance().getTimeInMillis();
 					status.PendingEviction = false;
 
-					RegionSigns.instance.getRentSystem().RegisterRenter(status);
+					RentManager.instance.pushRent(status, status.NextIntervalEnd);
+					
 					// Add the player to the 
 					mState.getRegion().getMembers().addPlayer(mPlayer.getName());
 					try {
@@ -291,8 +286,8 @@ public class RentSign extends InteractableSign
 			prompt += "\nYou will be charged nothing for the entire time you rent " + state.getRegion().getId();
 		}
 		
-		if(RentSystem.MinimumRentPeriod != 0)
-			prompt += "\nYou are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentSystem.MinimumRentPeriod, 2, false) + ChatColor.WHITE;
+		if(RentManager.MinimumRentPeriod != 0)
+			prompt += "\nYou are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentManager.MinimumRentPeriod, 2, false) + ChatColor.WHITE;
 
 		prompt += "\n(Type yes or no)";
 		

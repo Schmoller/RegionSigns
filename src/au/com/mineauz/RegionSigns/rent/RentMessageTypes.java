@@ -1,4 +1,4 @@
-package au.com.mineauz.RegionSigns;
+package au.com.mineauz.RegionSigns.rent;
 
 public enum RentMessageTypes
 {

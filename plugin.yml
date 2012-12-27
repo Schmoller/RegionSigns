@@ -21,12 +21,16 @@ permissions:
       regionsigns.use.claim: true
       regionsigns.use.rent: true
       regionsigns.rent.stop.others: true
+      regionsigns.rent.forcestop: true
+      regionsigns.rent.forcestop.others: true
       regionsigns.rent.info.others: true
       regionsigns.rent.list.*: true
       regionsigns.use.nolimit: true
       regionsigns.use.norestrict: true
       regionsigns.config.reload: true
       regionsigns.rent.nominperiod: true
+      regionsigns.rent.transfer: true
+      regionsigns.rent.set: true
   
   regionsigns.create.claim:
     description: Allow the player to create a claim sign

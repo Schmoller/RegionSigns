@@ -8,10 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.World;
-import org.bukkit.command.*;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
@@ -19,6 +16,8 @@ import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import au.com.mineauz.RegionSigns.claim.ClaimSign;
+import au.com.mineauz.RegionSigns.commands.*;
+import au.com.mineauz.RegionSigns.rent.RentManager;
 import au.com.mineauz.RegionSigns.rent.RentSign;
 
 import com.earth2me.essentials.Essentials;
@@ -32,8 +31,8 @@ public class RegionSigns extends JavaPlugin implements Listener
 {
 	ClaimSign mClaimSigns;
 	RentSign mRentSigns;
-	private RentSystem mRentSystem;
-	private FileConfiguration mStoredSigns;
+	
+	private CommandDispatcher mCommandHandler;
 	
 	public HashMap<String,ClaimRestriction> ClaimRestrictions;
 	public HashMap<String,ClaimRestriction> RentRestrictions;
@@ -65,7 +64,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 		}
 		else
 		{
-			count = mRentSystem.getCountIn(parent, player);
+			count = RentManager.instance.getCountIn(parent, player);
 		}
 		
 		return count;
@@ -91,7 +90,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 		}
 		else
 		{
-			count = mRentSystem.getCount(player);
+			count = RentManager.instance.getCount(player);
 		}
 		
 		return count;
@@ -265,17 +264,28 @@ public class RegionSigns extends JavaPlugin implements Listener
 		
 		initializeConfig();
 		
-		// Make sure there is a stored signs file
-		File storedSignsFile = new File(getDataFolder(),"stored.yml");
-		mStoredSigns = YamlConfiguration.loadConfiguration(storedSignsFile);
+		RentManager.instance = new RentManager();
+		RentManager.instance.start();
 		
-		mRentSystem = new RentSystem(this,mStoredSigns, storedSignsFile);
+		mCommandHandler = new CommandDispatcher("rent", "Region Renting (part of " + getDescription().getName() + " " + getDescription().getVersion() + ") by Schmoller");
+		mCommandHandler.registerCommand(new InfoCommand());
+		mCommandHandler.registerCommand(new StopCommand());
+		mCommandHandler.registerCommand(new ListCommand());
+		mCommandHandler.registerCommand(new ForceStopCommand());
+		mCommandHandler.registerCommand(new SetCommand());
+		mCommandHandler.registerCommand(new TransferCommand());
+		mCommandHandler.registerCommand(new ReloadCommand());
+		
+		getCommand("rent").setExecutor(mCommandHandler);
+		getCommand("rent").setTabCompleter(mCommandHandler);
+		
+		//mRentSystem = new RentSystem(this,mStoredSigns, storedSignsFile);
 		mClaimSigns = new ClaimSign(this);
 		mRentSigns = new RentSign(this);
 	}
 	public void onDisable()
 	{
-		mRentSystem.SaveRenters();
+		RentManager.instance.stop();
 	}
 	
 	public void initializeConfig()
@@ -305,23 +315,10 @@ public class RegionSigns extends JavaPlugin implements Listener
 		AnyRestrictions = readRestrictions("restrictions", true, true);
 		
 		try {
-			RentSystem.MinimumRentPeriod = Util.parseDateDiff(getConfig().getString("rent.minperiod", "2w"));
+			RentManager.MinimumRentPeriod = Util.parseDateDiff(getConfig().getString("rent.minperiod", "2w"));
 		} catch (Exception e) {
 			getLogger().severe("Invalid value in rent.minperiod");
 			e.printStackTrace();
 		}
-	}
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
-	{
-		if(cmd.getName().compareToIgnoreCase("rent") == 0)
-		{
-			return mRentSystem.onCommand(sender,cmd,label,args);
-		}
-		return false;
-	}
-	
-	public RentSystem getRentSystem()
-	{
-		return mRentSystem;
 	}
 }

@@ -1,9 +1,11 @@
-package au.com.mineauz.RegionSigns;
+package au.com.mineauz.RegionSigns.rent;
+
+import org.bukkit.OfflinePlayer;
 
 public class RentStatus 
 {
 	// The name of the player renting the region
-	public String Tenant;
+	public OfflinePlayer Tenant;
 	// The id of the region
 	public String Region;
 	// The world that the region is in

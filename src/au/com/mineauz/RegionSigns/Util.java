@@ -3,9 +3,9 @@ package au.com.mineauz.RegionSigns;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Player;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -344,7 +344,7 @@ public class Util
 		return 0;
 	}
 	
-	public static boolean playerHasEnough(Player player, double amount)
+	public static boolean playerHasEnough(OfflinePlayer player, double amount)
 	{
 		try
 		{
@@ -356,7 +356,7 @@ public class Util
 		}
 	}
 	
-	public static boolean playerSubtractMoney(Player player, double amount)
+	public static boolean playerSubtractMoney(OfflinePlayer player, double amount)
 	{
 		try
 		{
