@@ -27,7 +27,7 @@ public interface ICommand
 	 * @param sender The sender of the command
 	 * @return The usage string  
 	 */
-	public String getUsageString(String label, CommandSender sender);
+	public String[] getUsageString(String label, CommandSender sender);
 	
 	/**
 	 * Gets the description of the command for the help system

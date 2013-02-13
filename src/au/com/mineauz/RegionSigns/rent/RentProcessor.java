@@ -89,12 +89,10 @@ public class RentProcessor implements Runnable
 		}
 		else
 		{
-			if(rent.RentInterval == 0)
+			if(rent.RentInterval != 0)
 				RentManager.instance.pushRent(rent, rent.NextIntervalEnd + rent.RentInterval);
 			else
-			{
 				RentManager.instance.pushRent(rent, rent.NextIntervalEnd + Util.parseDateDiff("1w"));
-			}
 		}
 	}
 	

@@ -32,7 +32,6 @@ import au.com.mineauz.RegionSigns.Util;
 public class RentManager implements Listener
 {
 	public static RentManager instance;
-	public static long MinimumRentPeriod;
 	
 	private int mTaskId;
 	private int mAutosaveTaskId;
@@ -47,8 +46,8 @@ public class RentManager implements Listener
 		
 		Bukkit.getPluginManager().registerEvents(this, RegionSigns.instance);
 		
-		int checkInterval = RegionSigns.instance.getConfig().getInt("rent.check-interval",1200);
-		int autoSaveInterval = RegionSigns.instance.getConfig().getInt("rent.autosave-interval",6000);
+		int checkInterval = RegionSigns.config.checkInterval;
+		int autoSaveInterval = RegionSigns.config.autosaveInterval;
 		
 		load();
 		
@@ -125,44 +124,44 @@ public class RentManager implements Listener
 	
 	private String getDisplayMessage(RentMessage msg)
 	{
-		String message = RegionSigns.instance.getConfig().getString("rent.messages.prefix","");
+		String message = RegionSigns.config.messagePrefix;
 		
 		switch(msg.Type)
 		{
 		case Eviction:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.evicted");
+			message += RegionSigns.config.messageEvicted;
 			break;
 			//return ChatColor.GREEN + "[Rent] " + ChatColor.RED + "You have been evicted from '" + msg.Region + "'.Please contact an Admin or Mod to retrieve any remaining possesions.";
 		case EvictionPending:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.warning-evict");
+			message += RegionSigns.config.messageWarningEvict;
 			break;
 			//return ChatColor.GREEN + "[Rent] " + ChatColor.RED + "Warning: You will be evicted from '" + msg.Region + "' if payment is not recieved in " + FormatTimeDifference(msg.EventCompletionTime - Calendar.getInstance().getTimeInMillis(),2);
 		case InsufficientFunds:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.warning-funds");
+			message += RegionSigns.config.messageWarningFunds;
 			break;
 			//return ChatColor.GREEN + "[Rent] " + ChatColor.GOLD + "Warning: currently you have insufficient funds to pay rent next time";
 		case RentEnded:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.finished");
+			message += RegionSigns.config.messageFinished;
 			break;
 			//return ChatColor.GREEN + "[Rent] " + ChatColor.WHITE + "You have finished renting '" + msg.Region + "'. Please contact an Admin or Mod to retrieve any remaining possesions.";
 		case RentEnding:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.terminate");
+			message += RegionSigns.config.messageTerminate;
 			break;
 			//return ChatColor.GREEN + "[Rent] " + ChatColor.WHITE + "You have stopped renting '" + msg.Region + "'. You have " + FormatTimeDifference(msg.EventCompletionTime - Calendar.getInstance().getTimeInMillis(),2) + " to move out.";
 		case NextPaymentTime:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.next-payment");
+			message += RegionSigns.config.messageNextPayment;
 			break;
 		case PaymentSent:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.payment");
+			message += RegionSigns.config.messagePayment;
 			break;
 		case FirstPaymentTime:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.first-payment");
+			message += RegionSigns.config.messageFirstPayment;
 			break;
 		case RentBegin:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.begin");
+			message += RegionSigns.config.messageBeginRenting;
 			break;
 		case RentBeginFree:
-			message += RegionSigns.instance.getConfig().getString("rent.messages.begin-free");
+			message += RegionSigns.config.messageBeginRentingFree;
 			break;
 		}
 		

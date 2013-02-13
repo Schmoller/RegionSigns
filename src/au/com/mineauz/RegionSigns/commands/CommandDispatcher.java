@@ -114,7 +114,25 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 		
 		if(!com.onCommand(sender, subCommand, subArgs))
 		{
-			sender.sendMessage(ChatColor.RED + "Usage: /" + label + " " + com.getUsageString(subCommand, sender));
+			String[] lines = com.getUsageString(subCommand, sender);
+			String usageString = "";
+			
+			if(lines.length > 1)
+				usageString = ChatColor.RED + "Usage:\n    ";
+			else
+				usageString = ChatColor.RED + "Usage: ";
+			
+			boolean first = true;
+			for(String line : lines)
+			{
+				if(!first)
+					usageString += "\n    ";
+				first = false;
+				
+				usageString += ChatColor.GRAY + "/" + label + " " + line;
+			}
+				
+			sender.sendMessage(usageString);
 		}
 		
 		return true;
@@ -135,9 +153,16 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 		}
 		
 		boolean first = true;
+		boolean odd = true;
 		// Build the list
 		for(Entry<String, ICommand> ent : mCommands.entrySet())
 		{
+			if(odd)
+				usage += ChatColor.WHITE;
+			else
+				usage += ChatColor.GRAY;
+			odd = !odd;
+			
 			if(first)
 				usage += ent.getKey();
 			else
@@ -165,7 +190,6 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 		{
 			// Find the command to use
 			String subCommand = args[0].toLowerCase();
-			String[] subArgs = (args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
 			
 			ICommand com = null;
 			if(mCommands.containsKey(subCommand))
@@ -210,6 +234,7 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 				return results;
 			}
 			
+			String[] subArgs = (args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
 			results = com.onTabComplete(sender, subCommand, subArgs);
 			if(results == null)
 				return new ArrayList<String>();
@@ -239,15 +264,15 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 		}
 
 		@Override
-		public String getUsageString( String label, CommandSender sender )
+		public String[] getUsageString( String label, CommandSender sender )
 		{
-			return label;
+			return new String[] {label};
 		}
 
 		@Override
 		public String getDescription()
 		{
-			return "";
+			return "Displays this screen.";
 		}
 
 		@Override
@@ -282,7 +307,20 @@ AliasCheck:	for(Entry<String, ICommand> ent : mCommands.entrySet())
 				if(command.getPermission() != null && !sender.hasPermission(command.getPermission()))
 					continue;
 				
-				sender.sendMessage(ChatColor.GOLD + "/" + mRootCommandName + " " + command.getUsageString(command.getName(), sender) + "\n  " + ChatColor.WHITE + command.getDescription());
+				
+				String usageString = "";
+				boolean first = true;
+				for(String line : command.getUsageString(command.getName(), sender))
+				{
+					if(!first)
+						usageString += "\n";
+					
+					first = false;
+					
+					usageString += ChatColor.GOLD + "/" + mRootCommandName + " " + line;
+				}
+
+				sender.sendMessage(usageString + "\n  " + ChatColor.WHITE + command.getDescription());
 			}
 			return true;
 		}

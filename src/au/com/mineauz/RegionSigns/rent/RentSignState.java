@@ -46,7 +46,7 @@ public class RentSignState extends InteractableSignState
 		else
 		{
 			intervalPriceString = signLines[3];
-			intervalLengthString = RegionSigns.instance.getConfig().getString("rent.defaultperiod");
+			intervalLengthString = Util.formatDateDiffShort(RegionSigns.config.defaultRentPeriod);
 		}
 		
 		mIntervalPrice = Util.parseCurrency(intervalPriceString);
@@ -82,7 +82,7 @@ public class RentSignState extends InteractableSignState
 	@Override
 	public String[] getValidSignText()
 	{
-		boolean defaultPeriod = mIntervalLength == Util.parseDateDiff(RegionSigns.instance.getConfig().getString("rent.defaultperiod"));
+		boolean defaultPeriod = mIntervalLength == RegionSigns.config.defaultRentPeriod;
 		
 		return new String[] {mRegion.getId(), (mInitialPrice == 0.0 && defaultPeriod && mIntervalPrice == 0.0) ? "" : Util.formatCurrency(mInitialPrice), (defaultPeriod ? Util.formatCurrency(mIntervalPrice) : Util.formatCurrency(mIntervalPrice) + ":" + Util.formatDateDiffShort(mIntervalLength))};
 	}

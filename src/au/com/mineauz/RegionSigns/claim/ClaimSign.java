@@ -10,7 +10,10 @@ import org.bukkit.entity.Player;
 import au.com.mineauz.RegionSigns.Confirmation;
 import au.com.mineauz.RegionSigns.InteractableSign;
 import au.com.mineauz.RegionSigns.InteractableSignState;
+import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Restriction;
+import au.com.mineauz.RegionSigns.RestrictionType;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.events.ClaimSignCreateEvent;
 import au.com.mineauz.RegionSigns.events.ClaimSignDestroyEvent;
@@ -65,7 +68,7 @@ public class ClaimSign extends InteractableSign
 					
 					for(int i = 0; i < 4; ++i)
 					{
-						lines[i] = RegionSigns.instance.getConfig().getString("claim.sign.line" + (i+1), "");
+						lines[i] = RegionSigns.config.claimSign[i];
 						lines[i] = lines[i].replaceAll("<user>", mPlayer.getName());
 						lines[i] = lines[i].replaceAll("<region>", mState.getRegion().getId());
 					}
@@ -152,50 +155,36 @@ public class ClaimSign extends InteractableSign
 			return Reason.Owned;
 		}
 		
-		// Check that this player can actually claim the region
-		if(!player.hasPermission("regionsigns.use.nolimit") && RegionSigns.instance.getClaimLimit() != 0)
-		{
-			// Check to see if they have too many
-			if(RegionSigns.instance.getPlayerRegionCount(player, false) >= RegionSigns.instance.getClaimLimit())
-				return Reason.Limit;
-		}
+		// TODO: Overall limit
 		
 		if(region.getParent() != null)
 		{
-			String name = player.getWorld().getName() + "-" + region.getParent().getId();
+			// Restriction check
+			Restriction restriction = RegionSigns.restrictionManager.getRestriction(new Region(player.getWorld(), region.getParent().getId()));
 			
-			// Check for claim restrictions
-			if(RegionSigns.instance.ClaimRestrictions.containsKey(name) && !player.hasPermission("regionsigns.use.norestrict"))
+			if(restriction != null && restriction.type != RestrictionType.Rent && !player.hasPermission("regionsigns.use.norestrict"))
 			{
-				// Claiming is restricted. Check the perm
-				if(!player.hasPermission(RegionSigns.instance.ClaimRestrictions.get(name).ClaimPermission))
+				// Valid restriction for claiming
+				if(!player.hasPermission(restriction.permission))
 				{
-					sLastErrorExtraMessage = RegionSigns.instance.ClaimRestrictions.get(name).Message;
+					sLastErrorExtraMessage = restriction.message;
 					return Reason.Restrict;
 				}
-			}
-			// Check for other claim restrictions
-			if(RegionSigns.instance.AnyRestrictions.containsKey(name) && !player.hasPermission("regionsigns.use.norestrict"))
-			{
-				// Claiming is restricted. Check the perm
-				if(!player.hasPermission(RegionSigns.instance.AnyRestrictions.get(name).ClaimPermission))
+				
+				// Check the own limit
+				if(restriction.maxCount > 0 && !player.hasPermission("regionsigns.use.nolimit"))
 				{
-					sLastErrorExtraMessage = RegionSigns.instance.AnyRestrictions.get(name).Message;
-					return Reason.Restrict;
+					int regionCount = RegionSigns.instance.getPlayerRegionCountIn(region.getParent(), player, false);
+					
+					if(regionCount >= restriction.maxCount)
+					{
+						// Cant claim another region, Too many are owned
+						sLastErrorExtraMessage = region.getParent().getId();
+						return Reason.ChildLimit;
+					}
 				}
 			}
 			
-			int regionCount = RegionSigns.instance.getPlayerRegionCountIn(region.getParent(), player, false);
-			
-			if(!player.hasPermission("regionsigns.use.nolimit") && RegionSigns.instance.getClaimChildLimit() != 0)
-			{
-				// Check to see if they have too many
-				if(regionCount >= RegionSigns.instance.getClaimChildLimit())
-				{
-					sLastErrorExtraMessage = region.getParent().getId();
-					return Reason.ChildLimit;
-				}
-			}
 		}
 		
 		// Check for funds
@@ -282,12 +271,12 @@ public class ClaimSign extends InteractableSign
 			throw new Exception(ChatColor.GOLD + "The region '" + state.getRegion().getId() + "' already has an owner.");
 		
 		// Check the price
-		double maxPrice = RegionSigns.instance.getConfig().getDouble("claim.max-price");
+		double maxPrice = RegionSigns.config.maxClaimPrice;
 		if(maxPrice != 0)
 		{
 			// Make sure the range is fine
 			if(state.getPrice() > maxPrice)
-				throw new Exception("The price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.instance.getConfig().getDouble("claim.max-price")));
+				throw new Exception("The price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.config.maxClaimPrice));
 		}
 	}
 	
@@ -305,7 +294,7 @@ public class ClaimSign extends InteractableSign
 			
 			for(int i = 0; i < 4; ++i)
 			{
-				lines[i] = RegionSigns.instance.getConfig().getString("claim.sign.line" + (i+1),"");
+				lines[i] = RegionSigns.config.claimSign[i];
 				lines[i] = lines[i].replaceAll("<user>", owner);
 				lines[i] = lines[i].replaceAll("<region>", state.getRegion().getId());
 			}

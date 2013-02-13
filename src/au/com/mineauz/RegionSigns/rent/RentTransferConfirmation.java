@@ -50,7 +50,7 @@ public class RentTransferConfirmation
 						"You will be required to pay the rent of " + ChatColor.YELLOW + Util.formatCurrency(rent.IntervalPayment) + ChatColor.WHITE + 
 						" every " + ChatColor.YELLOW + Util.formatTimeDifference(rent.RentInterval, 2, true) + ChatColor.WHITE + " with your first payment due in " + 
 						ChatColor.YELLOW + Util.formatTimeDifference(rent.NextIntervalEnd - Calendar.getInstance().getTimeInMillis(), 2, false) + ChatColor.WHITE +
-						(RentManager.MinimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - rent.Date < RentManager.MinimumRentPeriod) ? " and are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentManager.MinimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - rent.Date), 2, true) + ChatColor.WHITE : "" ) +
+						(RegionSigns.config.minimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - rent.Date < RegionSigns.config.minimumRentPeriod) ? " and are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - rent.Date), 2, true) + ChatColor.WHITE : "" ) +
 						".\nDo you wish to accept? (Type yes or no)";
 				}
 			}

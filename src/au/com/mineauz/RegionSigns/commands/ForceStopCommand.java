@@ -41,12 +41,12 @@ public class ForceStopCommand implements ICommand
 	}
 
 	@Override
-	public String getUsageString( String label, CommandSender sender )
+	public String[] getUsageString( String label, CommandSender sender )
 	{
 		if(sender instanceof Player || sender instanceof BlockCommandSender)
-			return label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region>";
+			return new String[] {label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region>"};
 		else
-			return label + ChatColor.GOLD + " <world> <region>";
+			return new String[] {label + ChatColor.GOLD + " <world> <region>"};
 	}
 
 	@Override

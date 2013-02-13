@@ -14,7 +14,10 @@ import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import au.com.mineauz.RegionSigns.Confirmation;
 import au.com.mineauz.RegionSigns.InteractableSign;
 import au.com.mineauz.RegionSigns.InteractableSignState;
+import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Restriction;
+import au.com.mineauz.RegionSigns.RestrictionType;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.events.RegionRentEvent;
 import au.com.mineauz.RegionSigns.events.RentSignCreateEvent;
@@ -64,7 +67,7 @@ public class RentSign extends InteractableSign
 					
 					for(int i = 0; i < 4; ++i)
 					{
-						lines[i] = RegionSigns.instance.getConfig().getString("rent.sign.line" + (i+1), "");
+						lines[i] = RegionSigns.config.rentSign[i];
 						lines[i] = lines[i].replaceAll("<user>", mPlayer.getName());
 						lines[i] = lines[i].replaceAll("<region>", mState.getRegion().getId());
 					}
@@ -161,51 +164,34 @@ public class RentSign extends InteractableSign
 		
 		if(state.getRegion().getMembers().size() != 0)
 			return Reason.Owned;
-		
-		// Check that this player can actually rent the region
-		if(!player.hasPermission("regionsigns.use.nolimit") && RegionSigns.instance.getConfig().getInt("rent.overallmax",5) != 0)
-		{
-			// Check to see if they have too many
-			if(RegionSigns.instance.getPlayerRegionCount(player, true) >= RegionSigns.instance.getConfig().getInt("rent.overallmax",5))
-				return Reason.Limit;
-		}
-		
+
+		// TODO: Overall limit
+
 		if(state.getRegion().getParent() != null)
 		{
-			String name = state.getLocation().getWorld().getName() + "-" + state.getRegion().getParent().getId();
+			// Restriction check
+			Restriction restriction = RegionSigns.restrictionManager.getRestriction(new Region(player.getWorld(), state.getRegion().getParent().getId()));
 			
-			// Check for claim restrictions
-			if(((RegionSigns)RegionSigns.instance).RentRestrictions.containsKey(name) && !player.hasPermission("regionsigns.use.norestrict"))
+			if(restriction != null && restriction.type != RestrictionType.Claim && !player.hasPermission("regionsigns.use.norestrict"))
 			{
-				// Claiming is restricted. Check the perm
-				if(!player.hasPermission(((RegionSigns)RegionSigns.instance).RentRestrictions.get(name).ClaimPermission))
+				// Valid restriction for claiming
+				if(!player.hasPermission(restriction.permission))
 				{
-					sLastErrorExtraMessage = ((RegionSigns)RegionSigns.instance).RentRestrictions.get(name).Message;
+					sLastErrorExtraMessage = restriction.message;
 					return Reason.Restrict;
 				}
-			}
-			// Check for other claim restrictions
-			if(((RegionSigns)RegionSigns.instance).AnyRestrictions.containsKey(name) && !player.hasPermission("regionsigns.use.norestrict"))
-			{
-				// Claiming is restricted. Check the perm
-				if(!player.hasPermission(((RegionSigns)RegionSigns.instance).AnyRestrictions.get(name).ClaimPermission))
+				
+				// Check the own limit
+				if(restriction.maxCount > 0 && !player.hasPermission("regionsigns.use.nolimit"))
 				{
-					sLastErrorExtraMessage = ((RegionSigns)RegionSigns.instance).AnyRestrictions.get(name).Message;
-					return Reason.Restrict;
-				}
-			}
-			
-			// Run a search to find the number of regions they have for this parent
-
-			int regionCount = RegionSigns.instance.getPlayerRegionCountIn(state.getRegion().getParent(), player, true);
-			
-			if(!player.hasPermission("regionsigns.use.nolimit") && RegionSigns.instance.getConfig().getInt("rent.childmax",1) != 0)
-			{
-				// Check to see if they have too many
-				if(regionCount >= RegionSigns.instance.getConfig().getInt("rent.childmax",1))
-				{
-					sLastErrorExtraMessage = state.getRegion().getParent().getId();
-					return Reason.ChildLimit;
+					int regionCount = RegionSigns.instance.getPlayerRegionCountIn(state.getRegion().getParent(), player, true);
+					
+					if(regionCount >= restriction.maxCount)
+					{
+						// Cant claim another region, Too many are owned
+						sLastErrorExtraMessage = state.getRegion().getParent().getId();
+						return Reason.ChildLimit;
+					}
 				}
 			}
 		}
@@ -286,8 +272,8 @@ public class RentSign extends InteractableSign
 			prompt += "\nYou will be charged nothing for the entire time you rent " + state.getRegion().getId();
 		}
 		
-		if(RentManager.MinimumRentPeriod != 0)
-			prompt += "\nYou are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RentManager.MinimumRentPeriod, 2, false) + ChatColor.WHITE;
+		if(RegionSigns.config.minimumRentPeriod != 0)
+			prompt += "\nYou are required to rent for at least " + ChatColor.YELLOW + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod, 2, false) + ChatColor.WHITE;
 
 		prompt += "\n(Type yes or no)";
 		
@@ -322,21 +308,21 @@ public class RentSign extends InteractableSign
 
 		// Check the initial cost
 		// Make sure its not too high
-		double maxPrice = RegionSigns.instance.getConfig().getDouble("rent.max-price-upfront");
+		double maxPrice = RegionSigns.config.maxRentUpfrontPayment;
 		if(maxPrice != 0)
 		{
 			// Make sure the range is fine
 			if(state.getInitialPrice() > maxPrice)
-				throw new Exception("The upfront price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.instance.getConfig().getDouble("rent.max-price-upfront")));
+				throw new Exception("The upfront price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.config.maxRentUpfrontPayment));
 		}
 		
 		// Check the interval cost
-		maxPrice = RegionSigns.instance.getConfig().getDouble("rent.max-price-interval");
+		maxPrice = RegionSigns.config.maxRentIntervalPayment;
 		if(maxPrice != 0)
 		{
 			// Make sure the range is fine
 			if(state.getIntervalPrice() > maxPrice)
-				throw new Exception("The interval price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.instance.getConfig().getDouble("rent.max-price-interval")));
+				throw new Exception("The interval price is too high. The maximum allowed price is " + Util.formatCurrency(RegionSigns.config.maxRentIntervalPayment));
 		}
 	}
 
@@ -354,7 +340,7 @@ public class RentSign extends InteractableSign
 			
 			for(int i = 0; i < 4; ++i)
 			{
-				lines[i] = RegionSigns.instance.getConfig().getString("rent.sign.line" + (i+1),"");
+				lines[i] = RegionSigns.config.rentSign[i];
 				lines[i] = lines[i].replaceAll("<user>", owner);
 				lines[i] = lines[i].replaceAll("<region>", state.getRegion().getId());
 			}

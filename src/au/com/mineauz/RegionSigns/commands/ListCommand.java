@@ -35,9 +35,9 @@ public class ListCommand implements ICommand
 	}
 
 	@Override
-	public String getUsageString( String label, CommandSender sender )
+	public String[] getUsageString( String label, CommandSender sender )
 	{
-		return label + ChatColor.GOLD + " <who>" + ChatColor.GREEN + " [page]";
+		return new String[] {label + ChatColor.GOLD + " <who>" + ChatColor.GREEN + " [page]"};
 	}
 
 	@Override

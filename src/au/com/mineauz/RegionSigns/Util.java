@@ -3,6 +3,7 @@ package au.com.mineauz.RegionSigns;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
@@ -13,6 +14,24 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Util 
 {
+	
+	public static String repeat(String str, int times)
+	{
+		String output = "";
+		for(int i = 0; i < times; ++i)
+			output += str;
+		
+		return output;
+	}
+	public static String translateColours(String text)
+	{
+		String translated = text;
+		
+		for(ChatColor color : ChatColor.values())
+			translated = translated.replaceAll("%" + color.name().toLowerCase() + "%", color.toString());
+
+		return translated;
+	}
 	public static byte BlockFaceToNotch(BlockFace face)
 	{
 		switch(face)

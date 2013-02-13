@@ -1,21 +1,3 @@
-# You can place custom restrictions that apply to both claimable and rentable regions here
-restrictions:
-  ## This is a region name. It will affect all claimable/rentable regions that are children of this region
-  ## The permission to claim/rent a region with this region as the parent will be "regionsigns.any.mytown"
-  ## Because the world name is not specified, this will default to the overworld
-  # mytown:
-    ## Players without that permission will be shown this message when they try to acquire a region
-    # message: "You must be an unranked player to acquire this region"
-    ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-    # default: true 
-  ## This is the same as the example above but it specifies the world that the region is in
-  ## The permission to claim/rent a region with this region as the parent will be "regionsigns.any.world_nether-mytown"
-  # world_nether-mytown:
-    ## Players without that permission will be shown this message when they try to acquire a region
-    # message: "You must be an unranked player to acquire this region"
-    ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-    # default: true
-
 # The maximum number of regions a user can claim and rent overall. Setting to 0 means no max.
 # This is enforced strictly and neither claim.overallmax or rent.overallmax can override this
 globalmax: 5
@@ -43,24 +25,7 @@ claim:
   
   # The maximum number of regions a user can claim that have the same parent region. Setting to 0 means no max
   childmax: 1
-  
-  # You can place custom restrictions on claimable regions here
-  restrictions:
-    ## This is a region name. It will affect all claimable regions that are children of this region
-    ## The permission to claim a region with this region as the parent will be "regionsigns.claim.mytown"
-    ## Because the world name is not specified, this will default to the overworld
-    # mytown:
-      ## Players without that permission will be shown this message when they try to claim a region
-      # message: "You must be an unranked player to claim this region"
-      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-      # default: true 
-    ## This is the same as the example above but it specifies the world that the region is in
-    ## The permission to claim a region with this region as the parent will be "regionsigns.claim.world_nether-mytown"
-    # world_nether-mytown:
-      ## Players without that permission will be shown this message when they try to claim a region
-      # message: "You must be an unranked player to claim this region"
-      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-      # default: true
+
 rent:
   # The default payment interval
   defaultperiod: 1w
@@ -96,24 +61,6 @@ rent:
     line2:
     line3: <region>
     line4:
-  
-  # You can place custom restrictions on rentable regions here
-  restrictions:
-    ## This is a region name. It will affect all rentable regions that are children of this region
-    ## The permission to rent a region with this region as the parent will be "regionsigns.rent.mytown"
-    ## Because the world name is not specified, this will default to the overworld
-    # mytown:
-      ## Players without that permission will be shown this message when they try to rent a region
-      # message: "You must be a regular player to rent this region"
-      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-      # default: true 
-    ## This is the same as the example above but it specifies the world that the region is in
-    ## The permission to claim a region with this region as the parent will be "regionsigns.rent.world_nether-mytown"
-    # world_nether-mytown:
-      ## Players without that permission will be shown this message when they try to rent a region
-      # message: "You must be a regular player to rent this region"
-      ## This is who gets the permission by default. the values are: 'true', 'false', 'op', 'notop'
-      # default: true
   
   # Here you can customise the messages that are shown to players
   # Most messages can contain these 3 tags:

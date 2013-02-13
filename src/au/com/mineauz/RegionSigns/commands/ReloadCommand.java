@@ -29,9 +29,9 @@ public class ReloadCommand implements ICommand
 	}
 
 	@Override
-	public String getUsageString( String label, CommandSender sender )
+	public String[] getUsageString( String label, CommandSender sender )
 	{
-		return label;
+		return new String[] {label};
 	}
 	
 	@Override
@@ -58,9 +58,17 @@ public class ReloadCommand implements ICommand
 		if (args.length > 0)
 			return false;
 		
-		RegionSigns.instance.reloadConfig();
-		RegionSigns.instance.initializeConfig();
-		sender.sendMessage(ChatColor.GREEN + "Configuration Reloaded");
+		if(RegionSigns.config.load())
+		{
+			RegionSigns.config.save();
+			RegionSigns.restrictionManager.loadRestrictions();
+			sender.sendMessage(ChatColor.GREEN + "Configuration Reloaded");
+		}
+		else
+		{
+			sender.sendMessage(ChatColor.RED + "Failed to load configuration.");
+		}
+		
 		
 		return true;
 	}

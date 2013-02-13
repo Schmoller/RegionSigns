@@ -34,12 +34,12 @@ public class TransferCommand implements ICommand
 	}
 
 	@Override
-	public String getUsageString( String label, CommandSender sender )
+	public String[] getUsageString( String label, CommandSender sender )
 	{
 		if(sender instanceof Player || sender instanceof BlockCommandSender)
-			return label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region> <player>";
+			return new String[] {label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region> <player>"};
 		else
-			return label + ChatColor.GOLD + " <world> <region> <player>";
+			return new String[] {label + ChatColor.GOLD + " <world> <region> <player>"};
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.rent.RentManager;
 import au.com.mineauz.RegionSigns.rent.RentMessage;
@@ -36,12 +37,12 @@ public class StopCommand implements ICommand
 	}
 
 	@Override
-	public String getUsageString( String label, CommandSender sender )
+	public String[] getUsageString( String label, CommandSender sender )
 	{
 		if(sender instanceof Player || sender instanceof BlockCommandSender)
-			return label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region>";
+			return new String[] {label + ChatColor.GREEN + " [world]" + ChatColor.GOLD +  " <region>"};
 		else
-			return label + ChatColor.GOLD + " <world> <region>";
+			return new String[] {label + ChatColor.GOLD + " <world> <region>"};
 	}
 
 	@Override
@@ -119,12 +120,12 @@ public class StopCommand implements ICommand
 			sender.sendMessage(ChatColor.RED + "Unable to find a rented region with that id");
 		else
 		{
-			if(RentManager.MinimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - regionStatus.Date < RentManager.MinimumRentPeriod) && !sender.hasPermission("regionsigns.rent.nominperiod"))
+			if(RegionSigns.config.minimumRentPeriod != 0 && (Calendar.getInstance().getTimeInMillis() - regionStatus.Date < RegionSigns.config.minimumRentPeriod) && !sender.hasPermission("regionsigns.rent.nominperiod"))
 			{
 				if(sender instanceof Player && ((Player)sender).equals(regionStatus.Tenant))
-					sender.sendMessage(ChatColor.RED + "You cannot stop renting this region yet. You are required to rent for at least " + Util.formatTimeDifference(RentManager.MinimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
+					sender.sendMessage(ChatColor.RED + "You cannot stop renting this region yet. You are required to rent for at least " + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
 				else
-					sender.sendMessage(ChatColor.RED + regionStatus.Tenant.getName() + " cannot stop renting this region yet. They are required to rent for at least " + Util.formatTimeDifference(RentManager.MinimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
+					sender.sendMessage(ChatColor.RED + regionStatus.Tenant.getName() + " cannot stop renting this region yet. They are required to rent for at least " + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
 				
 				return true;
 			}
