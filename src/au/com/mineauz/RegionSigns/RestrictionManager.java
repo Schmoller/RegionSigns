@@ -25,16 +25,33 @@ public class RestrictionManager
 		
 		mRestrictions.put(restriction.region, restriction);
 		
+		RegionSigns.instance.getLogger().info("Adding restriction to " + restriction.region.getID() + " in " + restriction.region.getWorld().getName());
 		return true;
 	}
 	
+	public boolean addRestriction(Region region, RestrictionType type)
+	{
+		if(mRestrictions.containsKey(region))
+			return false;
+		
+		Restriction restriction = new Restriction();
+		restriction.region = region;
+		restriction.type = type;
+		restriction.permission = new Permission("regionsigns.restriction." + region.getWorld().getName() + "-" + region.getID());
+		restriction.permission.setDefault(PermissionDefault.FALSE);
+		restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
+
+		Bukkit.getPluginManager().addPermission(restriction.permission);
+		
+		return addRestriction(restriction);
+	}
 	public boolean addRestriction(Region region, RestrictionType type, String message, PermissionDefault def, int ownLimit)
 	{
 		if(mRestrictions.containsKey(region))
 			return false;
 		
 		Restriction restriction = new Restriction();
-		
+		restriction.region = region;
 		restriction.type = type;
 		restriction.message = message;
 		restriction.maxCount = ownLimit;
@@ -44,9 +61,7 @@ public class RestrictionManager
 
 		Bukkit.getPluginManager().addPermission(restriction.permission);
 		
-		mRestrictions.put(region, restriction);
-		
-		return true;
+		return addRestriction(restriction);
 	}
 	
 	public boolean setRestrictionMessage(Region region, String message)
@@ -151,6 +166,8 @@ public class RestrictionManager
 			return;
 		}
 		
+		RegionSigns.instance.getLogger().info("Loading Restrictions:");
+		
 		// Remove the perms
 		for(Restriction restriction : mRestrictions.values())
 			Bukkit.getPluginManager().removePermission(restriction.permission);
@@ -183,7 +200,16 @@ public class RestrictionManager
 			
 			// Parse the type
 			String typeString = section.getString("type", "all");
-			RestrictionType type = RestrictionType.valueOf(typeString.toUpperCase());
+			RestrictionType type = null;
+			for(RestrictionType rt : RestrictionType.values())
+			{
+				if(rt.toString().equalsIgnoreCase(typeString))
+				{
+					type = rt;
+					break;
+				}
+			}
+			
 			if(type == null)
 			{
 				RegionSigns.instance.getLogger().severe("Error reading restrictions: Restriction " + key + " has an invalid type of " + typeString + ". Valid types are: all, claim, rent. Skipping");

@@ -3,6 +3,7 @@ package au.com.mineauz.RegionSigns;
 import java.io.File;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -88,19 +89,6 @@ public class RegionSigns extends JavaPlugin implements Listener
 	public void onEnable()
 	{
 		instance = this;
-		config = new Config(new File(getDataFolder(), "settings.yml"));
-
-		// Check for old config
-		File oldConfig = new File(getDataFolder(), "config.yml");
-		if(oldConfig.exists())
-		{
-			LegacyConfigUpgrader.upgrade();
-		}
-		else
-		{
-			config.load();
-			config.save();
-		}
 
 		// Check to see if the plugins needed are present
 		if(getServer().getPluginManager().getPlugin("WorldGuard") == null || !(getServer().getPluginManager().getPlugin("WorldGuard") instanceof WorldGuardPlugin))
@@ -118,6 +106,34 @@ public class RegionSigns extends JavaPlugin implements Listener
 		}
 		
 		Util.sCurrencyChar = getServer().getPluginManager().getPlugin("Essentials").getConfig().getString("currency-symbol");
+		
+		
+		config = new Config(new File(getDataFolder(), "settings.yml"));
+
+		// Check for old config
+		File oldConfig = new File(getDataFolder(), "config.yml");
+		if(oldConfig.exists())
+		{
+			LegacyConfigUpgrader.upgrade();
+		}
+		else
+		{
+			config.load();
+			config.save();
+			
+			Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+				@Override
+				public void run()
+				{
+					restrictionManager.loadRestrictions();
+				}
+				
+			});
+			
+		}
+		
+		
 		
 		RentManager.instance = new RentManager();
 		RentManager.instance.start();

@@ -3,10 +3,18 @@ package au.com.mineauz.RegionSigns.commands;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionDefault;
 
+import au.com.mineauz.RegionSigns.Region;
+import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.RestrictionType;
 import au.com.mineauz.RegionSigns.Util;
 
 public class RestrictionCommand implements ICommand
@@ -38,6 +46,7 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%create <type> <world> %gold%<region>"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> message <message>"),
+					label + Util.translateColours(" %gold%set <world> %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
 					label + Util.translateColours(" %gold%delete <world> %gold%<region>")
 			};
 		}
@@ -47,6 +56,7 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%create <type> %green%[world] %gold%<region>"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> message <message>"),
+					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
 					label + Util.translateColours(" %gold%delete %green%[world] %gold%<region>")
 			};
 		}
@@ -66,15 +76,249 @@ public class RestrictionCommand implements ICommand
 
 	private boolean handleCreate(CommandSender sender, String[] args)
 	{
-		return false;
+		if(args.length < 2 || args.length > 3)
+			return false;
+		
+		RestrictionType type;
+		if(args[0].equalsIgnoreCase("all"))
+			type = RestrictionType.All;
+		else if(args[0].equalsIgnoreCase("claim"))
+			type = RestrictionType.Claim;
+		else if(args[0].equalsIgnoreCase("rent"))
+			type = RestrictionType.Rent;
+		else
+		{
+			sender.sendMessage(ChatColor.RED + "Expected restriction type (all,claim,rent). Got " + args[0]);
+			return true;
+		}
+		
+		World world;
+		
+		int i = 1;
+		if(args.length == 3)
+		{
+			// World is included
+			world = Bukkit.getWorld(args[1]);
+			
+			if(world == null)
+			{
+				sender.sendMessage(ChatColor.RED + "The world " + args[1] + " does not exist");
+				return true;
+			}
+			++i;
+		}
+		else
+		{
+			if(!(sender instanceof Player))
+				return false;
+			
+			world = ((Player)sender).getWorld();
+		}
+		
+		String regionId = args[i];
+		
+		Region region = new Region(world,  regionId);
+		
+		if(region.getProtectedRegion() == null)
+		{
+			sender.sendMessage(ChatColor.RED + "The region " + regionId + " does not exist");
+			return true;
+		}
+			
+		// Create it
+		if(RegionSigns.restrictionManager.addRestriction(region, type))
+		{
+			sender.sendMessage(ChatColor.GREEN + "Restriction created. The permission for this restriction is: " + ChatColor.WHITE + "\n" + RegionSigns.restrictionManager.getRestriction(region).permission.getName());
+			RegionSigns.restrictionManager.saveRestrictions();
+		}
+		else
+		{
+			if(RegionSigns.restrictionManager.getRestriction(region) != null)
+				sender.sendMessage(ChatColor.RED + "Failed to create restriction because one already exists for that region.");
+			else
+				sender.sendMessage(ChatColor.RED + "Failed to create restriction.");
+		}
+		
+		return true;
 	}
 	private boolean handleSet(CommandSender sender, String[] args)
 	{
-		return false;
+		if(args.length < 3)
+			return false;
+		
+		World world = Bukkit.getWorld(args[0]);
+		String regionId;
+		
+		int i = 0;
+		if(world == null)
+		{
+			if(!(sender instanceof Player))
+				return false;
+			
+			world = ((Player)sender).getWorld();
+		}
+		else
+			++i;
+		
+		regionId = args[i];
+		
+		Region region = new Region(world, regionId);
+		
+		if(region.getProtectedRegion() == null)
+		{
+			sender.sendMessage(ChatColor.RED + "That region does not exist.");
+			return true;
+		}
+		
+		
+		// Get the restriction
+		if(RegionSigns.restrictionManager.getRestriction(region) == null)
+		{
+			sender.sendMessage(ChatColor.RED + "There is no restriction on that region.");
+			return true;
+		}
+		
+		
+		// Apply the new values
+		if(args[i+1].equalsIgnoreCase("default"))
+		{
+			if(args.length <= i+2)
+				return false;
+			
+			boolean ok = false;
+			if(args[i+2].equalsIgnoreCase("none"))
+				ok = RegionSigns.restrictionManager.setRestrictionDefault(region, PermissionDefault.FALSE);
+			else if(args[i+2].equalsIgnoreCase("all"))
+				ok = RegionSigns.restrictionManager.setRestrictionDefault(region, PermissionDefault.TRUE);
+			else if(args[i+2].equalsIgnoreCase("op"))
+				ok = RegionSigns.restrictionManager.setRestrictionDefault(region, PermissionDefault.OP);
+			else if(args[i+2].equalsIgnoreCase("notop"))
+				ok = RegionSigns.restrictionManager.setRestrictionDefault(region, PermissionDefault.NOT_OP);
+			else
+			{
+				PermissionDefault def = PermissionDefault.getByName(args[i+2].toUpperCase());
+				
+				if(def == null)
+				{
+					sender.sendMessage(ChatColor.RED + "Invalid permission type " + args[i+2] + ". Expected none,all,op, or notop");
+					return true;
+				}
+				else
+					ok = RegionSigns.restrictionManager.setRestrictionDefault(region, def);
+			}
+			
+			if(ok)
+			{
+				RegionSigns.restrictionManager.saveRestrictions();
+				sender.sendMessage(ChatColor.GREEN + "The default permission for " + regionId + " was changed to " + args[i+2]);
+			}
+			else
+				sender.sendMessage(ChatColor.RED + "Failed to change the default permission");
+			
+		}
+		else if(args[i+1].equalsIgnoreCase("message"))
+		{
+			String message = "";
+			
+			for(int c = i+2; c < args.length; ++c)
+				message += args[c] + " ";
+			
+			message = message.trim();
+			
+			if(RegionSigns.restrictionManager.setRestrictionMessage(region, message))
+			{
+				RegionSigns.restrictionManager.saveRestrictions();
+				sender.sendMessage(ChatColor.GREEN + "The deny message for " + regionId + " was changed to '" + message + "'");
+			}
+			else
+				sender.sendMessage(ChatColor.RED + "Failed to change the deny message");
+		}
+		else if(args[i+1].equalsIgnoreCase("limit"))
+		{
+			if(args.length <= i+2)
+				return false;
+			
+			boolean ok = false;
+			if(args[i+2].equalsIgnoreCase("none"))
+				ok = RegionSigns.restrictionManager.setRestrictionOwnLimit(region, -1);
+			else
+			{
+				try
+				{
+					int limit = Integer.parseInt(args[i+2]);
+					if(limit <= 0)
+					{
+						sender.sendMessage(ChatColor.RED + "Invalid limit amount " + args[i+2] + ". Expected integer greater than 0 or 'none'");
+						return true;
+					}
+					ok = RegionSigns.restrictionManager.setRestrictionOwnLimit(region, limit);
+				}
+				catch(NumberFormatException e)
+				{
+					sender.sendMessage(ChatColor.RED + "Invalid limit amount " + args[i+2] + ". Expected integer greater than 0 or 'none'");
+					return true;
+				}
+			}
+			
+			if(ok)
+			{
+				RegionSigns.restrictionManager.saveRestrictions();
+				sender.sendMessage(ChatColor.GREEN + "The ownership limit for " + regionId + " was changed to " + args[i+2]);
+			}
+			else
+				sender.sendMessage(ChatColor.RED + "Failed to change the ownership limit");
+		}
+		else
+		{
+			sender.sendMessage(ChatColor.RED + "Expected default,message, or limit as Argument " + (i+2));
+		}
+		
+		return true;
 	}
 	private boolean handleDelete(CommandSender sender, String[] args)
 	{
-		return false;
+		if(args.length < 1 || args.length > 2)
+			return false;
+		
+		World world;
+		
+		int i = 0;
+		if(args.length == 2)
+		{
+			// World is included
+			world = Bukkit.getWorld(args[0]);
+			
+			if(world == null)
+			{
+				sender.sendMessage(ChatColor.RED + "The world " + args[0] + " does not exist");
+				return true;
+			}
+			++i;
+		}
+		else
+		{
+			if(!(sender instanceof Player))
+				return false;
+			
+			world = ((Player)sender).getWorld();
+		}
+		
+		String regionId = args[i];
+		
+		Region region = new Region(world,  regionId);
+		
+		// Remove it
+		if(RegionSigns.restrictionManager.removeRestriction(region))
+		{
+			sender.sendMessage(ChatColor.GREEN + "Restriction removed.");
+			RegionSigns.restrictionManager.saveRestrictions();
+		}
+		else
+		{
+			sender.sendMessage(ChatColor.RED + "There is no such restriction.");
+		}
+		
+		return true;
 	}
 	@Override
 	public boolean onCommand( CommandSender sender, String label, String[] args )
