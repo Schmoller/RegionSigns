@@ -43,7 +43,7 @@ public class RestrictionCommand implements ICommand
 		if(sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)
 		{
 			return new String[] {
-					label + Util.translateColours(" %gold%create <type> <world> %gold%<region>"),
+					label + Util.translateColours(" %gold%create <world> %gold%<region> <type> <default>"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
@@ -53,7 +53,7 @@ public class RestrictionCommand implements ICommand
 		else
 		{
 			return new String[] {
-					label + Util.translateColours(" %gold%create <type> %green%[world] %gold%<region>"),
+					label + Util.translateColours(" %gold%create %green%[world] %gold%<region> <type> <default>"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
@@ -76,59 +76,79 @@ public class RestrictionCommand implements ICommand
 
 	private boolean handleCreate(CommandSender sender, String[] args)
 	{
-		if(args.length < 2 || args.length > 3)
+		if(args.length < 2 || args.length > 4)
 			return false;
 		
-		RestrictionType type;
-		if(args[0].equalsIgnoreCase("all"))
-			type = RestrictionType.All;
-		else if(args[0].equalsIgnoreCase("claim"))
-			type = RestrictionType.Claim;
-		else if(args[0].equalsIgnoreCase("rent"))
-			type = RestrictionType.Rent;
-		else
-		{
-			sender.sendMessage(ChatColor.RED + "Expected restriction type (all,claim,rent). Got " + args[0]);
-			return true;
-		}
+		World world = null;
 		
-		World world;
-		
-		int i = 1;
-		if(args.length == 3)
+		int i = 0;
+		if(args.length == 4)
 		{
 			// World is included
-			world = Bukkit.getWorld(args[1]);
+			world = Bukkit.getWorld(args[i]);
 			
 			if(world == null)
 			{
-				sender.sendMessage(ChatColor.RED + "The world " + args[1] + " does not exist");
+				sender.sendMessage(ChatColor.RED + "The world " + args[i] + " does not exist");
 				return true;
 			}
 			++i;
 		}
 		else
 		{
-			if(!(sender instanceof Player))
-				return false;
-			
-			world = ((Player)sender).getWorld();
+			if(!args[i].equalsIgnoreCase("__global__"))
+			{
+				if(!(sender instanceof Player))
+					return false;
+				
+				world = ((Player)sender).getWorld();
+			}
 		}
 		
 		String regionId = args[i];
 		
+		RestrictionType type;
+		if(args[i+1].equalsIgnoreCase("all"))
+			type = RestrictionType.All;
+		else if(args[i+1].equalsIgnoreCase("claim"))
+			type = RestrictionType.Claim;
+		else if(args[i+1].equalsIgnoreCase("rent"))
+			type = RestrictionType.Rent;
+		else
+		{
+			sender.sendMessage(ChatColor.RED + "Expected restriction type (all,claim,rent). Got " + args[i+1]);
+			return true;
+		}
+		
+		PermissionDefault def = null;
+		
+		if(args[i+2].equalsIgnoreCase("none"))
+			def = PermissionDefault.FALSE;
+		else if(args[i+2].equalsIgnoreCase("all"))
+			def = PermissionDefault.TRUE;
+		else
+		{
+			def = PermissionDefault.getByName(args[i+2].toUpperCase());
+			
+			if(def == null)
+			{
+				sender.sendMessage(ChatColor.RED + "Invalid permission type " + args[i+2] + ". Expected none,all,op, or notop");
+				return true;
+			}
+		}
+		
 		Region region = new Region(world,  regionId);
 		
-		if(region.getProtectedRegion() == null)
+		if(!region.isGlobal() && region.getProtectedRegion() == null)
 		{
 			sender.sendMessage(ChatColor.RED + "The region " + regionId + " does not exist");
 			return true;
 		}
-			
+		
 		// Create it
-		if(RegionSigns.restrictionManager.addRestriction(region, type))
+		if(RegionSigns.restrictionManager.addRestriction(region, type, def))
 		{
-			sender.sendMessage(ChatColor.GREEN + "Restriction created. The permission for this restriction is: " + ChatColor.WHITE + "\n" + RegionSigns.restrictionManager.getRestriction(region).permission.getName());
+			sender.sendMessage(ChatColor.GREEN + "Restriction created. The permission for this restriction is: " + ChatColor.WHITE + "\n" + RegionSigns.restrictionManager.getRestriction(region).permission.getName() + "\n The default value is: " + def.toString());
 			RegionSigns.restrictionManager.saveRestrictions();
 		}
 		else
@@ -152,10 +172,13 @@ public class RestrictionCommand implements ICommand
 		int i = 0;
 		if(world == null)
 		{
-			if(!(sender instanceof Player))
-				return false;
-			
-			world = ((Player)sender).getWorld();
+			if(!args[i].equalsIgnoreCase("__global__"))
+			{
+				if(!(sender instanceof Player))
+					return false;
+				
+				world = ((Player)sender).getWorld();
+			}
 		}
 		else
 			++i;
@@ -280,7 +303,7 @@ public class RestrictionCommand implements ICommand
 		if(args.length < 1 || args.length > 2)
 			return false;
 		
-		World world;
+		World world = null;
 		
 		int i = 0;
 		if(args.length == 2)
@@ -297,10 +320,13 @@ public class RestrictionCommand implements ICommand
 		}
 		else
 		{
-			if(!(sender instanceof Player))
-				return false;
-			
-			world = ((Player)sender).getWorld();
+			if(!args[i].equalsIgnoreCase("__global__"))
+			{
+				if(!(sender instanceof Player))
+					return false;
+				
+				world = ((Player)sender).getWorld();
+			}
 		}
 		
 		String regionId = args[i];

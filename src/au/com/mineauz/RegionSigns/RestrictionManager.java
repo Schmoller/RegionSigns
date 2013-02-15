@@ -25,8 +25,31 @@ public class RestrictionManager
 		
 		mRestrictions.put(restriction.region, restriction);
 		
-		RegionSigns.instance.getLogger().info("Adding restriction to " + restriction.region.getID() + " in " + restriction.region.getWorld().getName());
+		if(restriction.region.getWorld() == null)
+			RegionSigns.instance.getLogger().info("Adding global restriction");
+		else
+			RegionSigns.instance.getLogger().info("Adding restriction to " + restriction.region.getID() + " in " + restriction.region.getWorld().getName());
 		return true;
+	}
+	
+	public boolean addRestriction(Region region, RestrictionType type, PermissionDefault def)
+	{
+		if(mRestrictions.containsKey(region))
+			return false;
+		
+		Restriction restriction = new Restriction();
+		restriction.region = region;
+		restriction.type = type;
+		restriction.permission = new Permission("regionsigns.restriction." + region.formatRegion());
+		restriction.permission.setDefault(def);
+		if(region.getWorld() == null)
+			restriction.permission.setDescription("Allows a player to aquire any region");
+		else
+			restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
+
+		Bukkit.getPluginManager().addPermission(restriction.permission);
+		
+		return addRestriction(restriction);
 	}
 	
 	public boolean addRestriction(Region region, RestrictionType type)
@@ -37,9 +60,12 @@ public class RestrictionManager
 		Restriction restriction = new Restriction();
 		restriction.region = region;
 		restriction.type = type;
-		restriction.permission = new Permission("regionsigns.restriction." + region.getWorld().getName() + "-" + region.getID());
+		restriction.permission = new Permission("regionsigns.restriction." + region.formatRegion());
 		restriction.permission.setDefault(PermissionDefault.FALSE);
-		restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
+		if(region.getWorld() == null)
+			restriction.permission.setDescription("Allows a player to aquire any region");
+		else
+			restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
 
 		Bukkit.getPluginManager().addPermission(restriction.permission);
 		
@@ -55,9 +81,12 @@ public class RestrictionManager
 		restriction.type = type;
 		restriction.message = message;
 		restriction.maxCount = ownLimit;
-		restriction.permission = new Permission("regionsigns.restriction." + region.getWorld().getName() + "-" + region.getID());
+		restriction.permission = new Permission("regionsigns.restriction." + region.formatRegion());
 		restriction.permission.setDefault(def);
-		restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
+		if(region.getWorld() != null)
+			restriction.permission.setDescription("Allows a player to aquire any region");
+		else
+			restriction.permission.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
 
 		Bukkit.getPluginManager().addPermission(restriction.permission);
 		
@@ -111,7 +140,7 @@ public class RestrictionManager
 		
 		for(Restriction restriction : mRestrictions.values())
 		{
-			ConfigurationSection section = config.createSection(restriction.region.getWorld().getName() + "-" + restriction.region.getID());
+			ConfigurationSection section = config.createSection(restriction.region.formatRegion());
 			section.set("type", restriction.type.toString().toLowerCase());
 			section.set("message", restriction.message);
 			switch(restriction.permission.getDefault())
@@ -177,13 +206,13 @@ public class RestrictionManager
 		// Parse the file
 		for(String key : config.getKeys(false))
 		{
-			if(!config.isConfigurationSection(key) || !key.contains("-"))
+			if(!config.isConfigurationSection(key))
 			{
 				RegionSigns.instance.getLogger().severe("Error reading restrictions: Restriction " + key + " is invalid. Skipping");
 				continue;
 			}
 			
-			Region region = Region.parse(key.split("-")[0], key.split("-")[1], null);
+			Region region = Region.parseRegion(key);
 			
 			if(region == null)
 			{
@@ -239,7 +268,11 @@ public class RestrictionManager
 			}
 			
 			perm.setDefault(def);
-			perm.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
+			
+			if(region.getWorld() == null)
+				perm.setDescription("Allows a player to aquire a child region of " + region.getID());
+			else
+				perm.setDescription("Allows a player to aquire a child region of " + region.getID() + " in " + region.getWorld().getName());
 			
 			restriction.permission = perm;
 			Bukkit.getPluginManager().addPermission(perm);

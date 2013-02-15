@@ -32,6 +32,15 @@ public class Region
 		return mID;
 	}
 	
+	public boolean isSuperGlobal()
+	{
+		return mWorld == null && mID.equalsIgnoreCase("__global__");
+	}
+	
+	public boolean isGlobal()
+	{
+		return mID.equalsIgnoreCase("__global__");
+	}
 	public ProtectedRegion getProtectedRegion()
 	{
 		RegionManager manager = RegionSigns.worldGuard.getRegionManager(mWorld);
@@ -71,9 +80,59 @@ public class Region
 		return region;
 	}
 	
+	public static Region parseRegion(String formatted)
+	{
+		String worldPart = "";
+		String idPart = "";
+		
+		// Extract the parts
+		worldPart = formatted.replaceAll("^(?:((?:'[\\w\\-]+')|\\w+)\\-)?((?:'[\\w\\-]+')|\\w+)$", "$1");
+		idPart = formatted.replaceAll("^(?:((?:'[\\w\\-]+')|\\w+)\\-)?((?:'[\\w\\-]+')|\\w+)$", "$2");
+		
+		worldPart = worldPart.trim();
+		worldPart = worldPart.replaceAll("'", "");
+		
+		idPart = idPart.trim();
+		idPart = idPart.replaceAll("'", "");
+		
+		Region region = new Region();
+		
+		region.mID = idPart;
+		
+		if(!worldPart.isEmpty())
+			region.mWorld = Bukkit.getWorld(worldPart);
+		
+		return region;
+	}
+	
+	public String formatRegion()
+	{
+		String result = "";
+		
+		if(mWorld != null)
+		{
+			if(mWorld.getName().contains("-"))
+				result += String.format("'%s'", mWorld.getName());
+			else
+				result += mWorld.getName();
+			
+			result += "-";
+		}
+		
+		if(mID.contains("-"))
+			result += String.format("'%s'", mID);
+		else
+			result += mID;
+		
+		return result;
+	}
+	
 	@Override
 	public int hashCode()
 	{
+		if(mWorld == null)
+			return mID.hashCode() << 5;
+		
 		return mWorld.hashCode() | (mID.hashCode() << 5);
 	}
 	
@@ -83,6 +142,9 @@ public class Region
 		if(!(obj instanceof Region))
 			return false;
 		
-		return ((Region)obj).mWorld.equals(mWorld) && ((Region)obj).mID.equals(mID); 
+		if(mWorld != null)
+			return ((Region)obj).mWorld.equals(mWorld) && ((Region)obj).mID.equals(mID);
+		else
+			return ((Region)obj).mID.equals(mID);
 	}
 }
