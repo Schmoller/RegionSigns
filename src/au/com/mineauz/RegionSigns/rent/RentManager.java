@@ -26,6 +26,7 @@ import org.bukkit.event.world.WorldSaveEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
 
@@ -389,7 +390,7 @@ public class RentManager implements Listener
 		}
 	}
 	
-	public int getCountIn(ProtectedRegion parent, Player player)
+	public int getCountIn(Region region, Player player)
 	{
 		int count = 0;
 
@@ -397,11 +398,27 @@ public class RentManager implements Listener
 		{
 			if(status.Tenant.equals(player))
 			{
-				RegionManager man = RegionSigns.worldGuard.getRegionManager(Bukkit.getWorld(status.World));
-				ProtectedRegion region = man.getRegionExact(status.Region);
-				
-				if(region.getParent() == parent)
-					count++;
+				if(region.isSuperGlobal())
+					++count;
+				else
+				{
+					if(region.isGlobal() && region.getWorld().getName().equals(status.World))
+						++count;
+					else
+					{
+						RegionManager man = RegionSigns.worldGuard.getRegionManager(Bukkit.getWorld(status.World));
+						ProtectedRegion parent = man.getRegionExact(status.Region);
+						while (parent != null)
+						{
+							if(parent.equals(region.getProtectedRegion()))
+							{
+								++count;
+								break;
+							}
+							parent = parent.getParent();
+						}
+					}
+				}
 			}
 		}
 		return count;

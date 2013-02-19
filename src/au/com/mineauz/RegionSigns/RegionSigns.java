@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,29 +33,83 @@ public class RegionSigns extends JavaPlugin implements Listener
 	public final static RestrictionManager restrictionManager = new RestrictionManager();
 	public static Config config;
 	
-	public int getPlayerRegionCountIn(ProtectedRegion parent, Player player, boolean rented)
+	public int getPlayerRegionCountIn(Region region, Player player, RestrictionType type)
 	{
 		int count = 0;
 		
-		if(!rented)
+		if(type != RestrictionType.Rent)
 		{
-			RegionManager manager = worldGuard.getRegionManager(player.getWorld());
-			if(manager == null)
-				return 0;
-			
-			LocalPlayer p = worldGuard.wrapPlayer(player);
-
-			// Count up the regions. dont include regions where they are members
-			for(Map.Entry<String, ProtectedRegion> region : manager.getRegions().entrySet())
+			if(region.isSuperGlobal())
 			{
-				if(region.getValue().isOwner(p) && region.getValue().getParent() == parent)
-					count++;
+				for(World world : Bukkit.getWorlds())
+				{
+					RegionManager manager = worldGuard.getRegionManager(world);
+					if(manager == null)
+						continue;
+					
+					LocalPlayer p = worldGuard.wrapPlayer(player);
+		
+					// Count up the regions. dont include regions where they are members
+					for(Map.Entry<String, ProtectedRegion> protectedRegion : manager.getRegions().entrySet())
+					{
+						if(!protectedRegion.getValue().isOwner(p))
+							continue;
+						
+						if(region.isGlobal())
+							++count;
+						else
+						{
+							ProtectedRegion parent = protectedRegion.getValue();
+							
+							while (parent != null)
+							{
+								if(parent.equals(region.getProtectedRegion()))
+								{
+									++count;
+									break;
+								}
+								parent = parent.getParent();
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				RegionManager manager = worldGuard.getRegionManager(region.getWorld());
+				if(manager == null)
+					return 0;
+				
+				LocalPlayer p = worldGuard.wrapPlayer(player);
+	
+				// Count up the regions. dont include regions where they are members
+				for(Map.Entry<String, ProtectedRegion> protectedRegion : manager.getRegions().entrySet())
+				{
+					if(!protectedRegion.getValue().isOwner(p))
+						continue;
+					
+					if(region.isGlobal())
+						++count;
+					else
+					{
+						ProtectedRegion parent = protectedRegion.getValue();
+						
+						while (parent != null)
+						{
+							if(parent.equals(region.getProtectedRegion()))
+							{
+								++count;
+								break;
+							}
+							parent = parent.getParent();
+						}
+					}
+				}
 			}
 		}
-		else
-		{
-			count = RentManager.instance.getCountIn(parent, player);
-		}
+		
+		if(type != RestrictionType.Claim)
+			count += RentManager.instance.getCountIn(region, player);
 		
 		return count;
 	}

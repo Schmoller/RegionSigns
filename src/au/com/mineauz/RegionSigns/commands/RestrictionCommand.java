@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.commands;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.bukkit.permissions.PermissionDefault;
 
 import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Restriction;
 import au.com.mineauz.RegionSigns.RestrictionType;
 import au.com.mineauz.RegionSigns.Util;
 
@@ -47,7 +49,8 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%set <world> %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
-					label + Util.translateColours(" %gold%delete <world> %gold%<region>")
+					label + Util.translateColours(" %gold%delete <world> %gold%<region>"),
+					label + Util.translateColours(" %gold%list <world> %green%[page]")
 			};
 		}
 		else
@@ -57,7 +60,8 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> default %white%(%gold%all%white%|%gold%none%white%|%gold%op%white%|%gold%notop%white%)"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
-					label + Util.translateColours(" %gold%delete %green%[world] %gold%<region>")
+					label + Util.translateColours(" %gold%delete %green%[world] %gold%<region>"),
+					label + Util.translateColours(" %gold%list %green%[world] %green%[page]")
 			};
 		}
 	}
@@ -65,7 +69,7 @@ public class RestrictionCommand implements ICommand
 	@Override
 	public String getDescription()
 	{
-		return "Creates, edits, and deletes region restrictions";
+		return "Creates, edits, deletes, and lists region restrictions";
 	}
 
 	@Override
@@ -187,7 +191,7 @@ public class RestrictionCommand implements ICommand
 		
 		Region region = new Region(world, regionId);
 		
-		if(region.getProtectedRegion() == null)
+		if(!region.isGlobal() && region.getProtectedRegion() == null)
 		{
 			sender.sendMessage(ChatColor.RED + "That region does not exist.");
 			return true;
@@ -346,6 +350,142 @@ public class RestrictionCommand implements ICommand
 		
 		return true;
 	}
+	
+	private boolean handleList(CommandSender sender, String[] args)
+	{
+		if (args.length > 2)
+			return false;
+		
+		// The number of items to show on a page
+		int cItemsPerPage = 6;
+		// The console can show more at a time
+		if(sender instanceof ConsoleCommandSender)
+			cItemsPerPage = 40;
+		
+		int page = 0;
+		
+		// Get the world
+		World world = null;
+		boolean all = false;
+		
+		if(args.length > 0)
+		{
+			// Could be the page number
+			if(args.length != 1 || !args[0].matches("[1-9][0-9]*"))
+			{
+				if(args[0].equalsIgnoreCase("__global__"))
+					all = true;
+				else
+				{
+					// World is included
+					world = Bukkit.getWorld(args[0]);
+					
+					if(world == null)
+					{
+						sender.sendMessage(ChatColor.RED + "The world " + args[0] + " does not exist");
+						return true;
+					}
+				}
+			}
+		}
+		
+		if (world == null && !all)
+		{
+			if(sender instanceof Player)
+			{
+				world = ((Player)sender).getWorld();
+			}
+		}
+		
+		// Get the page number
+		if(args.length > 0)
+		{
+			// Check its format
+			if(args[args.length-1].matches("[1-9][0-9]*"))
+			{
+				// Parse it
+				try
+				{
+					page = Integer.parseInt(args[args.length-1]) - 1;
+				}
+				catch(NumberFormatException e) {}
+			}
+			else if(args.length == 2)
+			{
+				return false;
+			}
+		}
+		
+		// Build the results list
+		ArrayList<String> results = new ArrayList<String>();
+
+		// get all the results
+		for(Restriction restriction : RegionSigns.restrictionManager.getRestrictions())
+		{
+			String text = "";
+			if(restriction.region.isSuperGlobal())
+				text += String.format("%%yellow%%%s\n", restriction.region.getID());
+			else
+				text += String.format("%%yellow%%%s %%red%%[%s]\n", restriction.region.getID(), restriction.region.getWorld().getName());
+
+			text += "  %gold%Affects: %gray%";
+			switch(restriction.type)
+			{
+			case All:
+				text += "Claiming and Renting";
+				break;
+			case Claim:
+				text += "Claiming";
+				break;
+			case Rent:
+				text += "Renting";
+				break;
+			}
+			
+			text += "\n";
+			if(restriction.permission != null)
+			{
+				text += String.format("  %%gold%%Permission: %%white%%%s\n", restriction.permission.getName());
+				text += String.format("  %%gold%%Default: %%gray%%%s\n", restriction.permission.getDefault().toString());
+			}
+
+			if(restriction.maxCount > 0)
+				text += String.format("  %%gold%%Ownership limit: %%gray%%%d", restriction.maxCount);
+			
+			text += "\n";
+			results.add(Util.translateColours(text));
+		}
+		
+		int totalPages = (int)Math.ceil(results.size()/cItemsPerPage); 
+		// Make sure they dont specify a page that doesnt exist
+		if(page > totalPages)
+			page = totalPages;
+		
+		if(results.size() == 0)
+		{
+			sender.sendMessage("There are no restrictions to display");
+		}
+		else
+		{
+			// Display the results
+			sender.sendMessage("----Restrictions----Page " + (page + 1) + " of " + (totalPages + 1));
+			for(int i = (page * cItemsPerPage); i < (page * cItemsPerPage + cItemsPerPage) && i < results.size(); i++)
+			{
+				sender.sendMessage(results.get(i));
+			}
+			if(page != totalPages)
+			{
+				if(world != null)
+					sender.sendMessage("Use /rent restriction list " + world.getName() + " " + (page + 2));
+				else if(all)
+					sender.sendMessage("Use /rent restriction list __global__ " + (page + 2));
+				else
+					sender.sendMessage("Use /rent restriction list " + (page + 2));
+			}
+		}
+		
+		return true;
+	}
 	@Override
 	public boolean onCommand( CommandSender sender, String label, String[] args )
 	{
@@ -364,6 +504,8 @@ public class RestrictionCommand implements ICommand
 		{
 			return handleDelete(sender, Arrays.copyOfRange(args, 1, args.length));
 		}
+		else if(args[0].equalsIgnoreCase("list"))
+			return handleList(sender, Arrays.copyOfRange(args, 1, args.length));
 		else
 			return false;
 	}
@@ -374,7 +516,7 @@ public class RestrictionCommand implements ICommand
 		if(args.length == 1)
 		{
 			if(args[0].trim().isEmpty())
-				return Arrays.asList(new String[] {"create", "set", "delete"});
+				return Arrays.asList(new String[] {"create", "set", "delete", "list"});
 			
 			if("create".startsWith(args[0].toLowerCase()))
 				return Arrays.asList(new String[] {"create"});
@@ -382,6 +524,8 @@ public class RestrictionCommand implements ICommand
 				return Arrays.asList(new String[] {"set"});
 			if("delete".startsWith(args[0].toLowerCase()))
 				return Arrays.asList(new String[] {"delete"});
+			if("list".startsWith(args[0].toLowerCase()))
+				return Arrays.asList(new String[] {"list"});
 		}
 		
 		if(args.length == 2 && args[0].equalsIgnoreCase("create"))

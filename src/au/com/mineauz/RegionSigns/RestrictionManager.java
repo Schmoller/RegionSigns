@@ -126,12 +126,45 @@ public class RestrictionManager
 	
 	public boolean removeRestriction(Region region)
 	{
-		return mRestrictions.remove(region) != null;
+		if(!mRestrictions.containsKey(region))
+			return false;
+		
+		if(mRestrictions.get(region).permission != null)
+		{
+			Bukkit.getPluginManager().removePermission(mRestrictions.get(region).permission);
+		}
+		
+		mRestrictions.remove(region);
+		
+		return true;
 	}
 	
 	public Restriction getRestriction(Region region)
 	{
-		return mRestrictions.get(region);
+		if(mRestrictions.containsKey(region))
+			return mRestrictions.get(region);
+		
+		if(region.getProtectedRegion() != null)
+		{
+			while(region.getProtectedRegion().getParent() != null)
+			{
+				region = new Region(region.getWorld(), region.getProtectedRegion().getParent().getId());
+				
+				if(mRestrictions.containsKey(region))
+					return mRestrictions.get(region);
+			}
+		}
+		
+		// Check the global regions
+		Region temp = new Region(region.getWorld(), "__global__");
+		if(mRestrictions.containsKey(temp))
+			return mRestrictions.get(temp);
+		
+		temp = new Region(null, "__global__");
+		if(mRestrictions.containsKey(temp))
+			return mRestrictions.get(temp);
+		
+		return null;
 	}
 	
 	public void saveRestrictions()
@@ -248,7 +281,7 @@ public class RestrictionManager
 			restriction.type = type;
 			
 			// Create the permission
-			Permission perm = new Permission(key);
+			Permission perm = new Permission("regionsigns.restriction." + region.formatRegion());
 			
 			// Parse the default
 			PermissionDefault def;

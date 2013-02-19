@@ -165,33 +165,42 @@ public class RentSign extends InteractableSign
 		if(state.getRegion().getMembers().size() != 0)
 			return Reason.Owned;
 
-		// TODO: Overall limit
-
-		if(state.getRegion().getParent() != null)
+		// Restriction check
+		Restriction restriction = RegionSigns.restrictionManager.getRestriction(new Region(player.getWorld(), state.getRegion().getId()));
+		
+		if(restriction != null && restriction.type != RestrictionType.Claim && !player.hasPermission("regionsigns.use.norestrict"))
 		{
-			// Restriction check
-			Restriction restriction = RegionSigns.restrictionManager.getRestriction(new Region(player.getWorld(), state.getRegion().getParent().getId()));
-			
-			if(restriction != null && restriction.type != RestrictionType.Claim && !player.hasPermission("regionsigns.use.norestrict"))
+			// Valid restriction for claiming
+			if(!player.hasPermission(restriction.permission))
 			{
-				// Valid restriction for claiming
-				if(!player.hasPermission(restriction.permission))
-				{
-					sLastErrorExtraMessage = restriction.message;
-					return Reason.Restrict;
-				}
+				sLastErrorExtraMessage = restriction.message.replaceAll("&", "" + ChatColor.COLOR_CHAR);
+				return Reason.Restrict;
+			}
+			
+			// Check the own limit
+			if(restriction.maxCount > 0 && !player.hasPermission("regionsigns.use.nolimit"))
+			{
+				int regionCount = RegionSigns.instance.getPlayerRegionCountIn(restriction.region, player, restriction.type);
 				
-				// Check the own limit
-				if(restriction.maxCount > 0 && !player.hasPermission("regionsigns.use.nolimit"))
+				if(regionCount >= restriction.maxCount)
 				{
-					int regionCount = RegionSigns.instance.getPlayerRegionCountIn(state.getRegion().getParent(), player, true);
-					
-					if(regionCount >= restriction.maxCount)
+					// Cant claim another region, Too many are owned
+					if(restriction.region.getID().equalsIgnoreCase("__global__"))
 					{
-						// Cant claim another region, Too many are owned
-						sLastErrorExtraMessage = state.getRegion().getParent().getId();
-						return Reason.ChildLimit;
+						if(restriction.region.isSuperGlobal())
+						{
+							sLastErrorExtraMessage = null;
+							return Reason.Limit;
+						}
+						else
+						{
+							sLastErrorExtraMessage = restriction.region.getWorld().getName();
+							return Reason.Limit;
+						}
 					}
+						
+					sLastErrorExtraMessage = restriction.region.getID();
+					return Reason.ChildLimit;
 				}
 			}
 		}
