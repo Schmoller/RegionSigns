@@ -139,6 +139,14 @@ public class RestrictionManager
 		return true;
 	}
 	
+	public Restriction getRestrictionExact(Region region)
+	{
+		if(mRestrictions.containsKey(region))
+			return mRestrictions.get(region);
+
+		return null;
+	}
+	
 	public Restriction getRestriction(Region region)
 	{
 		if(mRestrictions.containsKey(region))

@@ -50,7 +50,8 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%set <world> %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set <world> %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
 					label + Util.translateColours(" %gold%delete <world> %gold%<region>"),
-					label + Util.translateColours(" %gold%list <world> %green%[page]")
+					label + Util.translateColours(" %gold%list <world> %green%[page]"),
+					label + Util.translateColours(" %gold%info <world> <region>")
 			};
 		}
 		else
@@ -61,7 +62,8 @@ public class RestrictionCommand implements ICommand
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> message <message>"),
 					label + Util.translateColours(" %gold%set %green%[world] %gold%<region> limit %white%(%gold%<amount>%white%|%gold%none%white%)"),
 					label + Util.translateColours(" %gold%delete %green%[world] %gold%<region>"),
-					label + Util.translateColours(" %gold%list %green%[world] %green%[page]")
+					label + Util.translateColours(" %gold%list %green%[world] %green%[page]"),
+					label + Util.translateColours(" %gold%info %green%[world] %gold%<region>")
 			};
 		}
 	}
@@ -199,7 +201,7 @@ public class RestrictionCommand implements ICommand
 		
 		
 		// Get the restriction
-		if(RegionSigns.restrictionManager.getRestriction(region) == null)
+		if(RegionSigns.restrictionManager.getRestrictionExact(region) == null)
 		{
 			sender.sendMessage(ChatColor.RED + "There is no restriction on that region.");
 			return true;
@@ -422,6 +424,9 @@ public class RestrictionCommand implements ICommand
 		// get all the results
 		for(Restriction restriction : RegionSigns.restrictionManager.getRestrictions())
 		{
+			if(world != null && !world.equals(restriction.region.getWorld()))
+				continue;
+			
 			String text = "";
 			if(restriction.region.isSuperGlobal())
 				text += String.format("%%yellow%%%s\n", restriction.region.getID());
@@ -486,6 +491,81 @@ public class RestrictionCommand implements ICommand
 		
 		return true;
 	}
+	
+	private boolean handleInfo(CommandSender sender, String[] args)
+	{
+		if(args.length < 1 || args.length > 2)
+			return false;
+		
+		World world = null;
+		
+		int i = 0;
+		if(args.length == 2)
+		{
+			// World is included
+			world = Bukkit.getWorld(args[i]);
+			
+			if(world == null)
+			{
+				sender.sendMessage(ChatColor.RED + "The world " + args[i] + " does not exist");
+				return true;
+			}
+			++i;
+		}
+		else
+		{
+			if(!args[i].equalsIgnoreCase("__global__"))
+			{
+				if(!(sender instanceof Player))
+					return false;
+				
+				world = ((Player)sender).getWorld();
+			}
+		}
+		
+		String regionId = args[i];
+		Region region = new Region(world, regionId);
+		
+		Restriction restriction = RegionSigns.restrictionManager.getRestrictionExact(region);
+		
+		if(restriction == null)
+		{
+			sender.sendMessage(ChatColor.RED + "There is no restriction on that region.");
+			return true;
+		}
+		
+		if(restriction.region.isSuperGlobal())
+			sender.sendMessage(Util.translateColours(String.format("%%yellow%%%s", restriction.region.getID())));
+		else
+			sender.sendMessage(Util.translateColours(String.format("%%yellow%%%s %%red%%[%s]", restriction.region.getID(), restriction.region.getWorld().getName())));
+		
+		String text = "  %gold%Affects: %gray%";
+		switch(restriction.type)
+		{
+		case All:
+			text += "Claiming and Renting";
+			break;
+		case Claim:
+			text += "Claiming";
+			break;
+		case Rent:
+			text += "Renting";
+			break;
+		}
+		
+		sender.sendMessage(Util.translateColours(text));
+		
+		if(restriction.permission != null)
+		{
+			sender.sendMessage(Util.translateColours(String.format("  %%gold%%Permission: %%white%%%s", restriction.permission.getName())));
+			sender.sendMessage(Util.translateColours(String.format("  %%gold%%Default: %%gray%%%s\n", restriction.permission.getDefault().toString())));
+		}
+
+		if(restriction.maxCount > 0)
+			sender.sendMessage(Util.translateColours(String.format("  %%gold%%Ownership limit: %%gray%%%d", restriction.maxCount)));
+		
+		return true;
+	}
 	@Override
 	public boolean onCommand( CommandSender sender, String label, String[] args )
 	{
@@ -493,19 +573,15 @@ public class RestrictionCommand implements ICommand
 			return false;
 		
 		if(args[0].equalsIgnoreCase("create"))
-		{
 			return handleCreate(sender, Arrays.copyOfRange(args, 1, args.length));
-		}
 		else if(args[0].equalsIgnoreCase("set"))
-		{
 			return handleSet(sender, Arrays.copyOfRange(args, 1, args.length));
-		}
 		else if(args[0].equalsIgnoreCase("delete"))
-		{
 			return handleDelete(sender, Arrays.copyOfRange(args, 1, args.length));
-		}
 		else if(args[0].equalsIgnoreCase("list"))
 			return handleList(sender, Arrays.copyOfRange(args, 1, args.length));
+		else if(args[0].equalsIgnoreCase("info"))
+			return handleInfo(sender, Arrays.copyOfRange(args, 1, args.length));
 		else
 			return false;
 	}
@@ -516,7 +592,7 @@ public class RestrictionCommand implements ICommand
 		if(args.length == 1)
 		{
 			if(args[0].trim().isEmpty())
-				return Arrays.asList(new String[] {"create", "set", "delete", "list"});
+				return Arrays.asList(new String[] {"create", "set", "delete", "list", "info"});
 			
 			if("create".startsWith(args[0].toLowerCase()))
 				return Arrays.asList(new String[] {"create"});
@@ -526,6 +602,8 @@ public class RestrictionCommand implements ICommand
 				return Arrays.asList(new String[] {"delete"});
 			if("list".startsWith(args[0].toLowerCase()))
 				return Arrays.asList(new String[] {"list"});
+			if("info".startsWith(args[0].toLowerCase()))
+				return Arrays.asList(new String[] {"info"});
 		}
 		
 		if(args.length == 2 && args[0].equalsIgnoreCase("create"))
