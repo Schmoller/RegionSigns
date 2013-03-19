@@ -388,6 +388,18 @@ public class Util
 		}
 	}
 	
+	public static double getPlayerMoney(OfflinePlayer player)
+	{
+		try
+		{
+			return Economy.getMoney(player.getName());
+		}
+		catch(Exception e)
+		{
+			return 0;
+		}
+	}
+	
 	public static ProtectedRegion getRegion(World world, String regionName)
 	{
 		if(RegionSigns.worldGuard.getRegionManager(world) == null)

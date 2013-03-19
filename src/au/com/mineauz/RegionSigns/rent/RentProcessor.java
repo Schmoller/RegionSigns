@@ -33,6 +33,7 @@ public class RentProcessor implements Runnable
 		{
 			if(Util.playerSubtractMoney(rent.Tenant, rent.IntervalPayment))
 			{
+				RegionSigns.instance.getLogger().info(String.format("Taking $%.2f from %s to pay rent for %s leaving them with $%.2f", rent.IntervalPayment, rent.Tenant.getName(), rent.Region, Util.getPlayerMoney(rent.Tenant)));
 				// The message about a payment being made
 				RentMessage paymentMade = new RentMessage();
 				paymentMade.Type = RentMessageTypes.PaymentSent;
@@ -50,7 +51,8 @@ public class RentProcessor implements Runnable
 				RentManager.instance.sendMessage(paymentMade, rent.Tenant);
 				RentManager.instance.sendMessage(paymentTime, rent.Tenant);
 				
-				RentManager.instance.pushRent(rent, rent.NextIntervalEnd + rent.RentInterval);
+				rent.NextIntervalEnd = rent.NextIntervalEnd + rent.RentInterval;
+				RentManager.instance.pushRent(rent, rent.NextIntervalEnd);
 				
 				if(!Util.playerHasEnough(rent.Tenant, rent.IntervalPayment))
 				{
