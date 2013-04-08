@@ -42,6 +42,9 @@ public class Config extends AutoConfig
 	@ConfigField(name="sign-format",category="rent",comment="The format of the sign after it has been rented\nThere are 2 tags you can use in the text\n- <user> which is replaced with the players name\n- <region> which is replaced with the regions name")
 	public String[] rentSign = {"<user>","","<region>",""};
 	
+	@ConfigField(name="max-price",category="sale",comment="The maximum price that you can put on a sale sign. Setting to 0 means no maximum price")
+	public double maxSalePrice = 0;
+	
 	/// Messages
 	@ConfigField(name="prefix",category="rent.messages", comment="This is the prefix of all messages")
 	public String messagePrefix = "&a[Rent]&f ";

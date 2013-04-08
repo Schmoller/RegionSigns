@@ -388,6 +388,19 @@ public class Util
 		}
 	}
 	
+	public static boolean playerAddMoney(OfflinePlayer player, double amount)
+	{
+		try
+		{
+			Economy.add(player.getName(), amount);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	
 	public static double getPlayerMoney(OfflinePlayer player)
 	{
 		try

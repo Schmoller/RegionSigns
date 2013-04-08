@@ -13,6 +13,7 @@ import au.com.mineauz.RegionSigns.claim.ClaimSign;
 import au.com.mineauz.RegionSigns.commands.*;
 import au.com.mineauz.RegionSigns.rent.RentManager;
 import au.com.mineauz.RegionSigns.rent.RentSign;
+import au.com.mineauz.RegionSigns.sale.SaleSign;
 
 import com.earth2me.essentials.Essentials;
 import com.sk89q.worldguard.LocalPlayer;
@@ -24,6 +25,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 {
 	ClaimSign mClaimSigns;
 	RentSign mRentSigns;
+	SaleSign mSaleSigns;
 	
 	private CommandDispatcher mCommandHandler;
 	
@@ -209,6 +211,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 		//mRentSystem = new RentSystem(this,mStoredSigns, storedSignsFile);
 		mClaimSigns = new ClaimSign(this);
 		mRentSigns = new RentSign(this);
+		mSaleSigns = new SaleSign(this);
 	}
 	public void onDisable()
 	{

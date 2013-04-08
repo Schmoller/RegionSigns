@@ -221,6 +221,9 @@ public class RestrictionManager
 		FileConfiguration config = new YamlConfiguration();
 		File file = new File(RegionSigns.instance.getDataFolder(), "restrictions.yml");
 		
+		if(!file.exists())
+			return;
+		
 		try
 		{
 			config.load(file);

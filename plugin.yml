@@ -32,6 +32,8 @@ permissions:
       regionsigns.rent.transfer: true
       regionsigns.rent.set: true
       regionsigns.restrictions.edit: true
+      regionsigns.create.sale: true
+      regionsigns.use.sale: true
   
   regionsigns.create.claim:
     description: Allow the player to create a claim sign
@@ -64,6 +66,14 @@ permissions:
     children:
       regionsigns.create.rent: true
 
+  regionsigns.create.sale:
+    description: Allows a player to sell their region
+    default: op
+    
+  regionsigns.use.sale:
+    description: Allows a player to use a sale sign
+    default: true
+    
   regionsigns.use.rent:
     description: Allow the player to use rent signs and "/rent help"
     default: true
