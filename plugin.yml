@@ -34,6 +34,7 @@ permissions:
       regionsigns.restrictions.edit: true
       regionsigns.create.sale: true
       regionsigns.use.sale: true
+      regionsigns.use.manage.others: true
   
   regionsigns.create.claim:
     description: Allow the player to create a claim sign
@@ -132,3 +133,13 @@ permissions:
   regionsigns.restrictions.edit:
     description: Allows a player to edit restrictions using /rent restriction
     default: op
+    
+  regionsigns.use.manage:
+    description: Allows a player to use the management sign.
+    default: true
+  
+  regionsigns.use.manage.others:
+    description: Allows a player to use management signs for other players.
+    default: op
+    children:
+      regionsigns.use.manage: true

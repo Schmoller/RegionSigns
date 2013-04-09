@@ -205,19 +205,19 @@ public abstract class InteractableSign
 			Bukkit.getPluginManager().registerEvents(this, RegionSigns.instance);
 		}
 		
-		@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		private void onSignChange(SignChangeEvent event)
 		{
 			processSignChanged(event);
 		}
 		
-		@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		private void onBlockBreak(BlockBreakEvent event)
 		{
 			processBlockBreak(event);
 		}
 		
-		@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		private void onPlayerInteract(PlayerInteractEvent event)
 		{
 			processPlayerInteract(event);

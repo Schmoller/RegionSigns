@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import au.com.mineauz.RegionSigns.claim.ClaimSign;
 import au.com.mineauz.RegionSigns.commands.*;
+import au.com.mineauz.RegionSigns.manage.ManagementSign;
 import au.com.mineauz.RegionSigns.rent.RentManager;
 import au.com.mineauz.RegionSigns.rent.RentSign;
 import au.com.mineauz.RegionSigns.sale.SaleSign;
@@ -26,6 +27,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 	ClaimSign mClaimSigns;
 	RentSign mRentSigns;
 	SaleSign mSaleSigns;
+	ManagementSign mManagementSigns;
 	
 	private CommandDispatcher mCommandHandler;
 	
@@ -212,6 +214,7 @@ public class RegionSigns extends JavaPlugin implements Listener
 		mClaimSigns = new ClaimSign(this);
 		mRentSigns = new RentSign(this);
 		mSaleSigns = new SaleSign(this);
+		mManagementSigns = new ManagementSign();
 	}
 	public void onDisable()
 	{
