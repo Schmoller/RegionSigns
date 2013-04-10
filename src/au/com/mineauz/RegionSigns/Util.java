@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -419,6 +420,33 @@ public class Util
 			return null;
 		
 		return RegionSigns.worldGuard.getRegionManager(world).getRegion(regionName);
+	}
+	
+	public static String makeNameList(Set<String> names)
+	{
+		String nameList = "";
+		
+		for(String name : names)
+		{
+			nameList += (!nameList.isEmpty() ? ", " : "") + name;
+		}
+		
+		return nameList;
+	}
+	
+	public static String makeNameList(Set<String> names, String replaceName, String with)
+	{
+		String nameList = "";
+		
+		for(String name : names)
+		{
+			if(name.equalsIgnoreCase(replaceName))
+				name = with;
+			
+			nameList += (!nameList.isEmpty() ? ", " : "") + name;
+		}
+		
+		return nameList;
 	}
 	
 	public static String sCurrencyChar;

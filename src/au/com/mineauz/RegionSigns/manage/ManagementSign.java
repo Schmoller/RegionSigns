@@ -1,21 +1,31 @@
 package au.com.mineauz.RegionSigns.manage;
 
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Util;
+import au.com.mineauz.RegionSigns.rent.RentManager;
+import au.com.mineauz.RegionSigns.rent.RentStatus;
 
 public class ManagementSign implements Listener
 {
@@ -107,6 +117,72 @@ public class ManagementSign implements Listener
 		return values[0];
 	}
 	
+	private void displayStatus(Player player, ProtectedRegion region, DefaultDomain owners, RentStatus status)
+	{
+		ArrayList<String> messages = new ArrayList<String>();
+		
+		messages.add("Region Status: ");
+		messages.add("  Region: " + ChatColor.YELLOW + region.getId());
+		
+		String ownerList = Util.makeNameList(owners.getPlayers(), player.getName(), "You");
+		
+		if(status != null)
+			messages.add("  Tenants: " + ChatColor.YELLOW + ownerList);
+		else
+			messages.add("  Owners: " + ChatColor.YELLOW + ownerList);
+		
+		if(owners != region.getMembers())
+		{
+			String memberList = Util.makeNameList(region.getMembers().getPlayers(), player.getName(), "You");
+			
+			if(memberList.isEmpty())
+				memberList = "Nobody";
+			
+			messages.add("  Members: " + ChatColor.YELLOW + memberList);
+		}
+		
+		if(status != null)
+		{
+			if(status.Tenant.getName().equals(player.getName()))
+				messages.add("  Main Tenant: " + ChatColor.YELLOW + "You");
+			else
+				messages.add("  Main Tenant: " + ChatColor.YELLOW + status.Tenant.getName());
+			
+			String rentStatus =    "  Status: ";
+			
+			if(status.PendingEviction)
+				rentStatus += ChatColor.RED + "Pending Eviction";
+			else if(status.PendingRemoval)
+				rentStatus += ChatColor.GOLD + "Ending Rent";
+			else
+				rentStatus += ChatColor.GREEN + "Normal";
+			
+			messages.add(rentStatus);
+			
+			if(status.PendingEviction)
+			{
+				messages.add("  Evicted In: " + ChatColor.YELLOW + Util.formatTimeDifference(status.NextIntervalEnd - status.RentInterval - Calendar.getInstance().getTimeInMillis(),2, false));
+				messages.add("  Next Payment: " + ChatColor.YELLOW + Util.formatCurrency(status.IntervalPayment));
+			}
+			else if(status.PendingRemoval)
+			{
+				messages.add("  Terminated In: " + ChatColor.YELLOW + Util.formatTimeDifference(status.NextIntervalEnd - Calendar.getInstance().getTimeInMillis(),2, false));
+			}
+			else
+			{
+				messages.add("  Next Payment In: " + ChatColor.YELLOW + Util.formatTimeDifference(status.NextIntervalEnd - Calendar.getInstance().getTimeInMillis(),2, false));
+				messages.add("  Next Payment: " + ChatColor.YELLOW + Util.formatCurrency(status.IntervalPayment));
+			}
+				
+			
+			if(status.Date != 0)
+				messages.add("  Renting Since: " + ChatColor.YELLOW + DateFormat.getDateTimeInstance().format(new Date(status.Date)));
+		}
+		
+		String[] msgs = messages.toArray(new String[messages.size()]);
+		player.sendMessage(msgs);
+	}
+	
 	@EventHandler(priority= EventPriority.MONITOR, ignoreCancelled=true)
 	private void onPlayerInteract(PlayerInteractEvent event)
 	{
@@ -132,15 +208,24 @@ public class ManagementSign implements Listener
 		if(region == null)
 			return;
 		
+		DefaultDomain applicableGroup;
+		
+		RentStatus status = RentManager.instance.getStatus(new Region(clickedBlock.getWorld(), regionName));
+		
+		if(status != null)
+			applicableGroup = region.getMembers();
+		else
+			applicableGroup = region.getOwners();
+		
 		// See if this player can use the sign
-		if(!region.isOwner(event.getPlayer().getName()) && !event.getPlayer().hasPermission("regionsigns.use.manage.others"))
+		if(!applicableGroup.contains(event.getPlayer().getName()) && !event.getPlayer().hasPermission("regionsigns.use.manage.others"))
 			return;
 		
 		String playerName = getPlayerName(clickedBlock.getLines());
 		
 		// Make sure the name on the sign matches one of the owners
 		boolean ok = false;
-		for(String name : region.getOwners().getPlayers())
+		for(String name : applicableGroup.getPlayers())
 		{
 			if(name.toLowerCase().startsWith(playerName.toLowerCase()))
 			{
@@ -154,8 +239,13 @@ public class ManagementSign implements Listener
 		
 		// All checks done, now the sign can be used
 		
-		event.getPlayer().sendMessage("Checks passed");
-		
-		event.setCancelled(true);
+		if(event.getAction() == Action.LEFT_CLICK_BLOCK)
+			displayStatus(event.getPlayer(), region, applicableGroup, status);
+		else
+		{
+			// Do conversation
+			ManagementMenu menu = new ManagementMenu(region, clickedBlock.getLocation(), event.getPlayer(), status);
+			menu.show();
+		}
 	}
 }

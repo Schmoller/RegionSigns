@@ -434,6 +434,18 @@ public class RentManager implements Listener
 		return count;
 	}
 	
+	public RentStatus getStatus(Region region)
+	{
+		for(RentStatus status : mRentStack.values())
+		{
+			if(status.Region.equals(region.getID()))
+				return status;
+		}
+		
+		return null;
+	}
+			
+	
 	@EventHandler
 	private void onWorldSave(WorldSaveEvent event)
 	{

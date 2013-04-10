@@ -35,6 +35,7 @@ permissions:
       regionsigns.create.sale: true
       regionsigns.use.sale: true
       regionsigns.use.manage.others: true
+      regionsigns.flags.all: true
   
   regionsigns.create.claim:
     description: Allow the player to create a claim sign
@@ -143,3 +144,25 @@ permissions:
     default: op
     children:
       regionsigns.use.manage: true
+      
+  regionsigns.flags.pvp:
+    description: Toggles pvp in a region
+    default: false
+  regionsigns.flags.use:
+    description: Toggles use in a region
+    default: false
+  regionsigns.flags.greeting:
+    description: Sets the greeting message for a region
+    default: false
+  regionsigns.flags.farewell:
+    description: Sets the farewell message for a region
+    default: false
+    
+  regionsigns.flags.all:
+    description: Allows all flags
+    default: op
+    children:
+      regionsigns.flags.pvp: true
+      regionsigns.flags.use: true
+      regionsigns.flags.greeting: true
+      regionsigns.flags.farewell: true

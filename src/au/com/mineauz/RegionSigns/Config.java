@@ -42,8 +42,13 @@ public class Config extends AutoConfig
 	@ConfigField(name="sign-format",category="rent",comment="The format of the sign after it has been rented\nThere are 2 tags you can use in the text\n- <user> which is replaced with the players name\n- <region> which is replaced with the regions name")
 	public String[] rentSign = {"<user>","","<region>",""};
 	
+	/// Sale signs
 	@ConfigField(name="max-price",category="sale",comment="The maximum price that you can put on a sale sign. Setting to 0 means no maximum price")
 	public double maxSalePrice = 0;
+	
+	/// Management Signs
+	@ConfigField(name="unclaimed-sign-format",category="general",comment="The format of the sign after the region has been unclaimed.\nYou can use the <region> tag to indicate the region name")
+	public String[] unclaimedSign = {"<region>","Unclaimed","Waiting for","reset"};
 	
 	/// Messages
 	@ConfigField(name="prefix",category="rent.messages", comment="This is the prefix of all messages")
