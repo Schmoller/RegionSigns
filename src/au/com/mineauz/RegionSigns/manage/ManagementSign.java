@@ -4,11 +4,13 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -247,5 +249,15 @@ public class ManagementSign implements Listener
 			ManagementMenu menu = new ManagementMenu(region, clickedBlock.getLocation(), event.getPlayer(), status);
 			menu.show();
 		}
+	}
+	
+	public static List<Location> getSignLocations(ProtectedRegion region)
+	{
+		return null;
+	}
+	
+	public static void addSign(ProtectedRegion region)
+	{
+		
 	}
 }

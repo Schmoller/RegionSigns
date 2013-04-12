@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.manage;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
+import au.com.mineauz.RegionSigns.events.RegionUnclaimEvent;
 
 import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -25,7 +27,7 @@ public class UnclaimMenu extends ValidatingPrompt implements ISubMenu
 		ProtectedRegion region = (ProtectedRegion)context.getSessionData("region");
 		Player player = ((Player)context.getForWhom());
 		
-		if(region.isOwner(player.getName()))
+		if(region.getOwners().contains(player.getName()))
 			return "Do you want to unclaim " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "?\nYou will no longer be able to access anything in the region. (Enter yes or no)";
 		else
 			return "Do you want to force " + ChatColor.YELLOW + Util.makeNameList(region.getOwners().getPlayers()) + ChatColor.WHITE + " to unclaim " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "? (Enter yes or no)";
@@ -50,7 +52,7 @@ public class UnclaimMenu extends ValidatingPrompt implements ISubMenu
 		boolean isOwner = false;
 		Player player = ((Player)context.getForWhom());
 		
-		isOwner = region.isOwner(player.getName());
+		isOwner = region.getOwners().contains(player.getName());
 		
 		region.setOwners(new DefaultDomain());
 		region.setMembers(new DefaultDomain());
@@ -62,6 +64,9 @@ public class UnclaimMenu extends ValidatingPrompt implements ISubMenu
 		
 		// Replace the sign
 		Location signLocation = (Location)context.getSessionData("sign");
+		
+		RegionUnclaimEvent event = new RegionUnclaimEvent(region, signLocation);
+		Bukkit.getPluginManager().callEvent(event);
 		
 		if(signLocation.getBlock().getType() == Material.WALL_SIGN || signLocation.getBlock().getType() == Material.SIGN_POST)
 		{

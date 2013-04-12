@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.rent;
 
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 
 public class RentStatus 
@@ -22,4 +23,6 @@ public class RentStatus
 	public boolean PendingRemoval;
 	// The date when the renting was started
 	public long Date;
+	// The location of the sign to change on evict/end
+	public Location SignLocation;
 }

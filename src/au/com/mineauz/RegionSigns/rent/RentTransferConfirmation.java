@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
@@ -16,9 +19,6 @@ import org.bukkit.entity.Player;
 import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class RentTransferConfirmation 
@@ -76,28 +76,12 @@ public class RentTransferConfirmation
 					CommandSender requester = (CommandSender)context.getSessionData("req");
 					Player curTenant = (Player)context.getSessionData("cur");
 					Player newTenant = (Player)context.getSessionData("new");
-					
-					WorldGuardPlugin worldGuard = RegionSigns.worldGuard;
+					Location signLocation = (Location)context.getSessionData("sign");
 					
 					World world = RegionSigns.instance.getServer().getWorld(rent.World);
-					if(world == null)
-					{
-						requester.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region + ". " + rent.World + " doesnt exist, which is where the region is supposed to be.");
-						curTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
-						newTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
-						return Prompt.END_OF_CONVERSATION;
-					}
 					
-					RegionManager man = worldGuard.getRegionManager(world);
-					if(man == null)
-					{
-						requester.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region + ". WorldGuard is not enabled in " + rent.World);
-						curTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
-						newTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
-						return Prompt.END_OF_CONVERSATION;
-					}
+					ProtectedRegion region = Util.getRegion(world, rent.Region);
 					
-					ProtectedRegion region = man.getRegion(rent.Region);
 					if(region == null)
 					{
 						requester.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region + ". The region no longer exists");
@@ -112,17 +96,36 @@ public class RentTransferConfirmation
 					rent.Tenant = newTenant;
 					
 					// Attempt to save
-					try 
+					if(!Util.saveRegionManager(world))
 					{
-						man.save();
-					} 
-					catch (ProtectionDatabaseException e) 
-					{
-						e.printStackTrace();
 						requester.sendMessage(ChatColor.RED + "An Internal Error occured transfering " + rent.Region + ".");
 						curTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
 						newTenant.sendMessage(ChatColor.RED + "An Error occured transfering " + rent.Region);
 						return Prompt.END_OF_CONVERSATION;
+					}
+					
+					if(signLocation == null)
+						signLocation = rent.SignLocation;
+					
+					// Update the sign
+					if(signLocation != null && (signLocation.getBlock().getType() == Material.WALL_SIGN || signLocation.getBlock().getType() == Material.SIGN_POST))
+					{
+						Sign signState = (Sign)signLocation.getBlock().getState();
+						
+						String[] lines = signState.getLines();
+						
+						for(int i = 0; i < 4; ++i)
+						{
+							lines[i] = RegionSigns.config.claimSign[i];
+							lines[i] = lines[i].replaceAll("<user>", newTenant.getName());
+							lines[i] = lines[i].replaceAll("<region>", rent.Region);
+						}
+						
+						// Change the sign text
+						for(int i = 0; i < 4; i++)
+							signState.setLine(i, lines[i]);
+						
+						signState.update(true);
 					}
 					
 					requester.sendMessage(rent.Region + " has now been transfered to " + ((Player)context.getSessionData("new")).getName());
@@ -155,13 +158,20 @@ public class RentTransferConfirmation
 	Player mCurrentTenant;
 	Player mNewTenant;
 	CommandSender mRequester;
+	Location mSignLocation;
 	
 	public RentTransferConfirmation(RentStatus rentStatus, Player currentTenant, Player newTenant, CommandSender requester)
+	{
+		this(rentStatus, currentTenant, newTenant, requester, null);
+	}
+	
+	public RentTransferConfirmation(RentStatus rentStatus, Player currentTenant, Player newTenant, CommandSender requester, Location signLocation)
 	{
 		mRentStatus = rentStatus;
 		mCurrentTenant = currentTenant;
 		mNewTenant = newTenant;
 		mRequester = requester;
+		mSignLocation = signLocation;
 		
 		Map<Object, Object> sessionData = new HashMap<Object, Object>();
 		sessionData.put("rs", rentStatus);
@@ -171,6 +181,7 @@ public class RentTransferConfirmation
 		sessionData.put("stage", 0);
 		sessionData.put("rtc", this);
 		sessionData.put("fail",false);
+		sessionData.put("sign",mSignLocation);
 		
 		ConversationFactory factory = new ConversationFactory(RegionSigns.instance)
 			.withTimeout(20)
@@ -194,6 +205,7 @@ public class RentTransferConfirmation
 		sessionData.put("stage", 1);
 		sessionData.put("rtc", this);
 		sessionData.put("fail",false);
+		sessionData.put("sign",mSignLocation);
 		
 		ConversationFactory factory = new ConversationFactory(RegionSigns.instance)
 			.withTimeout(20)

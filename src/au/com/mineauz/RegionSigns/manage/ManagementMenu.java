@@ -16,9 +16,9 @@ import org.bukkit.entity.Player;
 
 import au.com.mineauz.RegionSigns.OutOfRangeCanceller;
 import au.com.mineauz.RegionSigns.RegionSigns;
+import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.rent.RentStatus;
 
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class ManagementMenu implements ConversationAbandonedListener
@@ -156,12 +156,7 @@ public class ManagementMenu implements ConversationAbandonedListener
 	@Override
 	public void conversationAbandoned( ConversationAbandonedEvent event )
 	{
-		try 
-		{
-			RegionSigns.worldGuard.getRegionManager(((Location)event.getContext().getSessionData("sign")).getWorld()).save();
-		} 
-		catch (ProtectionDatabaseException e) {}
-		catch (NullPointerException e) {}
+		Util.saveRegionManager(((Location)event.getContext().getSessionData("sign")).getWorld());
 		
 		mPlayer.sendMessage("You are no longer in the management menu");
 	}

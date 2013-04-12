@@ -71,7 +71,7 @@ public class AddPlayerMenu extends ValidatingPrompt implements ISubMenu
 			
 			ProtectedRegion region = (ProtectedRegion)context.getSessionData("region");
 			
-			if(region.isOwner(toAdd.getName()) || region.isMember(toAdd.getName()))
+			if(region.getOwners().contains(toAdd.getName()) || region.getMembers().contains(toAdd.getName()))
 				return false;
 			
 			return true;

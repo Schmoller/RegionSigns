@@ -9,8 +9,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
-
 import au.com.mineauz.RegionSigns.Confirmation;
 import au.com.mineauz.RegionSigns.InteractableSign;
 import au.com.mineauz.RegionSigns.InteractableSignState;
@@ -136,15 +134,14 @@ public class RentSign extends InteractableSign
 					status.NextIntervalEnd = Calendar.getInstance().getTimeInMillis() + mState.getIntervalLength();
 					status.Date = Calendar.getInstance().getTimeInMillis();
 					status.PendingEviction = false;
+					status.SignLocation = mState.getLocation();
 
 					RentManager.instance.pushRent(status, status.NextIntervalEnd);
 					
 					// Add the player to the 
 					mState.getRegion().getMembers().addPlayer(mPlayer.getName());
-					try {
-						RegionSigns.worldGuard.getRegionManager(mState.getLocation().getWorld()).save();
-					} catch (ProtectionDatabaseException e) {
-					}
+					
+					Util.saveRegionManager(mState.getLocation().getWorld());
 					
 					// Change the sign text
 					for(int i = 0; i < 4; ++i)

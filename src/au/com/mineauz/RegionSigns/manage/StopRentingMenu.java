@@ -26,8 +26,9 @@ public class StopRentingMenu extends ValidatingPrompt implements ISubMenu
 	{
 		ProtectedRegion region = (ProtectedRegion)context.getSessionData("region");
 		Player player = ((Player)context.getForWhom());
+		RentStatus status = (RentStatus)context.getSessionData("status");
 		
-		if(region.isOwner(player.getName()))
+		if(status.Tenant.getName().equals(player.getName()))
 			return "Do you want to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "?\nYou will no longer be able to access anything in the region. (Enter yes or no)";
 		else
 			return "Do you want to force " + ChatColor.YELLOW + Util.makeNameList(region.getMembers().getPlayers()) + ChatColor.WHITE + " to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "? (Enter yes or no)";

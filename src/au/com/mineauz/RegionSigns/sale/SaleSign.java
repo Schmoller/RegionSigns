@@ -24,7 +24,6 @@ import au.com.mineauz.RegionSigns.events.SaleSignDestroyEvent;
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 import com.sk89q.worldguard.domains.DefaultDomain;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class SaleSign extends InteractableSign 
@@ -86,6 +85,7 @@ public class SaleSign extends InteractableSign
 						return;
 					}
 					
+					Bukkit.getPluginManager().callEvent(new RegionUnclaimEvent(mState.getRegion(), mState.getLocation()));
 					Bukkit.getPluginManager().callEvent(event);
 					
 					if(event.isCancelled())
@@ -111,10 +111,10 @@ public class SaleSign extends InteractableSign
 					{
 						owners[index] = Bukkit.getOfflinePlayer(owner); 
 						Util.playerAddMoney(owners[index], amtPer);
-						
-						Bukkit.getPluginManager().callEvent(new RegionUnclaimEvent(mState.getRegion(), mState.getLocation(), owners[index]));
+
 						++index;
 					}
+					
 					
 					String message;
 					
@@ -162,10 +162,8 @@ public class SaleSign extends InteractableSign
 					
 					// Add this player to the region
 					mState.getRegion().getOwners().addPlayer(mPlayer.getName());
-					try {
-						RegionSigns.worldGuard.getRegionManager(mState.getLocation().getWorld()).save();
-					} catch (ProtectionDatabaseException e) {
-					}
+					
+					Util.saveRegionManager(mState.getLocation().getWorld());
 					
 					// Change the sign text
 					for(int i = 0; i < 4; i++)

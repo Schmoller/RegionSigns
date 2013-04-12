@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -273,6 +274,17 @@ public class RentManager implements Listener
 			section.set("interval", entry.getValue().RentInterval);
 			section.set("next", entry.getValue().NextIntervalEnd);
 			section.set("date", entry.getValue().Date);
+			
+			if(entry.getValue().SignLocation != null)
+			{
+				ConfigurationSection location = section.createSection("sign");
+				location.set("world", entry.getValue().SignLocation.getWorld().getName());
+				location.set("x", entry.getValue().SignLocation.getX());
+				location.set("y", entry.getValue().SignLocation.getY());
+				location.set("z", entry.getValue().SignLocation.getZ());
+				location.set("yaw", (double)entry.getValue().SignLocation.getYaw());
+				location.set("pitch", (double)entry.getValue().SignLocation.getPitch());
+			}
 		}
 		
 		try
@@ -315,6 +327,12 @@ public class RentManager implements Listener
 			rent.RentInterval = section.getLong("interval");
 			rent.NextIntervalEnd = section.getLong("next");
 			rent.Date = section.getLong("date");
+			
+			if(section.isConfigurationSection("sign"))
+			{
+				ConfigurationSection location = section.getConfigurationSection("sign");
+				rent.SignLocation = new Location(Bukkit.getWorld(location.getString("world")), location.getDouble("x"), location.getDouble("y"), location.getDouble("z"), (float)location.getDouble("yaw"), (float)location.getDouble("pitch"));
+			}
 			
 			pushRent(rent, Long.parseLong(key));
 		}

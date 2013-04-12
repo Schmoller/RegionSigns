@@ -4,12 +4,13 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.sk89q.worldguard.domains.DefaultDomain;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import au.com.mineauz.RegionSigns.RegionSigns;
@@ -129,11 +130,7 @@ public class ForceStopCommand implements ICommand
 			
 			regionObject.setMembers(new DefaultDomain());
 			
-			try 
-			{
-				RegionSigns.worldGuard.getRegionManager(Bukkit.getWorld(regionStatus.World)).save();
-			} 
-			catch (ProtectionDatabaseException e) {}
+			Util.saveRegionManager(Bukkit.getWorld(regionStatus.World));
 			
 			// remove the rent status
 			RentManager.instance.removeRent(regionStatus);
@@ -147,6 +144,22 @@ public class ForceStopCommand implements ICommand
 
 			RentManager.instance.sendMessage(msg,regionStatus.Tenant);
 			sender.sendMessage(ChatColor.GREEN + regionStatus.Tenant.getName() + " finished renting '" + regionStatus.Region + "' and has been removed from it");
+			
+			// Update the sign
+			if(regionStatus.SignLocation != null && (regionStatus.SignLocation.getBlock().getType() == Material.WALL_SIGN || regionStatus.SignLocation.getBlock().getType() == Material.SIGN_POST))
+			{
+				Sign sign = (Sign)regionStatus.SignLocation.getBlock().getState();
+				
+				for(int i = 0; i < 4; ++i)
+				{
+					String line = RegionSigns.config.unclaimedSign[i];
+					line = line.replaceAll("<region>", regionStatus.Region);
+					
+					sign.setLine(i, line);
+				}
+				
+				sign.update(true);
+			}
 		}
 		
 		return true;

@@ -1,11 +1,14 @@
 package au.com.mineauz.RegionSigns.manage;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.ValidatingPrompt;
 import org.bukkit.entity.Player;
 
+import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.rent.RentManager;
 import au.com.mineauz.RegionSigns.rent.RentMessage;
@@ -24,8 +27,9 @@ public class ForceStopRentingMenu extends ValidatingPrompt implements ISubMenu
 	{
 		ProtectedRegion region = (ProtectedRegion)context.getSessionData("region");
 		Player player = ((Player)context.getForWhom());
+		RentStatus status = (RentStatus)context.getSessionData("status");
 		
-		if(region.isOwner(player.getName()))
+		if(status.Tenant.getName().equals(player.getName()))
 			return "Do you want to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "?\nYou will no longer be able to access anything in the region. (Enter yes or no)";
 		else
 			return "Do you want to force " + ChatColor.YELLOW + Util.makeNameList(region.getMembers().getPlayers()) + ChatColor.WHITE + " to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "? (Enter yes or no)";
@@ -74,6 +78,22 @@ public class ForceStopRentingMenu extends ValidatingPrompt implements ISubMenu
 
 		RentManager.instance.sendMessage(msg,status.Tenant);
 		player.sendMessage(ChatColor.GREEN + status.Tenant.getName() + " finished renting '" + status.Region + "' and has been removed from it");
+		
+		// Update the sign
+		if(status.SignLocation != null && (status.SignLocation.getBlock().getType() == Material.WALL_SIGN || status.SignLocation.getBlock().getType() == Material.SIGN_POST))
+		{
+			Sign sign = (Sign)status.SignLocation.getBlock().getState();
+			
+			for(int i = 0; i < 4; ++i)
+			{
+				String line = RegionSigns.config.unclaimedSign[i];
+				line = line.replaceAll("<region>", status.Region);
+				
+				sign.setLine(i, line);
+			}
+			
+			sign.update(true);
+		}
 		
 		return Prompt.END_OF_CONVERSATION;
 	}

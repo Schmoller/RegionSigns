@@ -7,6 +7,7 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.ValidatingPrompt;
 import org.bukkit.entity.Player;
 
+import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.rent.RentStatus;
 import au.com.mineauz.RegionSigns.rent.RentTransferConfirmation;
 
@@ -32,10 +33,10 @@ public class TransferRentMenu extends ValidatingPrompt implements ISubMenu
 		if(input.equalsIgnoreCase("back"))
 			return mParent;
 		
-		RentStatus status = (RentStatus)context.getSessionData("status");
-		Player player = ((Player)context.getForWhom());
+		final RentStatus status = (RentStatus)context.getSessionData("status");
+		final Player player = ((Player)context.getForWhom());
 		
-		Player currentTenant, newTenant;
+		final Player currentTenant, newTenant;
 		
 		currentTenant = status.Tenant.getPlayer();
 		newTenant = Bukkit.getPlayerExact(input);
@@ -53,9 +54,17 @@ public class TransferRentMenu extends ValidatingPrompt implements ISubMenu
 		}
 		
 		player.sendMessage("Both parties have been informed and are now required to accept before transfer will be complete.");
-		new RentTransferConfirmation(status, currentTenant, newTenant, player);
+		Bukkit.getScheduler().scheduleSyncDelayedTask(RegionSigns.instance, new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				new RentTransferConfirmation(status, currentTenant, newTenant, player);
+			}
+		}, 10L);
 		
-		return mParent;
+		
+		return Prompt.END_OF_CONVERSATION;
 	}
 
 	@Override

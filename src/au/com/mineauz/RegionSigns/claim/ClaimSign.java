@@ -21,7 +21,6 @@ import au.com.mineauz.RegionSigns.events.RegionClaimEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class ClaimSign extends InteractableSign 
@@ -105,10 +104,8 @@ public class ClaimSign extends InteractableSign
 					
 					// Add the player to the 
 					mState.getRegion().getOwners().addPlayer(mPlayer.getName());
-					try {
-						RegionSigns.worldGuard.getRegionManager(mState.getLocation().getWorld()).save();
-					} catch (ProtectionDatabaseException e) {
-					}
+					
+					Util.saveRegionManager(mState.getLocation().getWorld());
 					
 					// Change the sign text
 					for(int i = 0; i < 4; i++)

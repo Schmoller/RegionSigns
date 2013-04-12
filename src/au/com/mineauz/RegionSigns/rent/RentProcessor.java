@@ -1,9 +1,10 @@
 package au.com.mineauz.RegionSigns.rent;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 
 import com.sk89q.worldguard.domains.DefaultDomain;
-import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import au.com.mineauz.RegionSigns.RegionSigns;
@@ -29,7 +30,7 @@ public class RentProcessor implements Runnable
 			processEndRent(rent, false);
 		
 		// Handle payments
-		if(rent.IntervalPayment > 0 && rent.RentInterval > 0)
+		else if(rent.IntervalPayment > 0 && rent.RentInterval > 0)
 		{
 			if(Util.playerSubtractMoney(rent.Tenant, rent.IntervalPayment))
 			{
@@ -107,11 +108,7 @@ public class RentProcessor implements Runnable
 			// Remove the tenant(s)
 			region.setMembers(new DefaultDomain());
 			
-			try 
-			{
-				RegionSigns.worldGuard.getRegionManager(Bukkit.getWorld(rent.World)).save();
-			} 
-			catch (ProtectionDatabaseException e) {}
+			Util.saveRegionManager(Bukkit.getWorld(rent.World));
 		}
 		
 		RentMessage finishedMsg = new RentMessage();
@@ -122,5 +119,35 @@ public class RentProcessor implements Runnable
 		
 		// Notify the tenant
 		RentManager.instance.sendMessage(finishedMsg,rent.Tenant);
+		
+		// Update the sign
+		if(rent.SignLocation != null && (rent.SignLocation.getBlock().getType() == Material.WALL_SIGN || rent.SignLocation.getBlock().getType() == Material.SIGN_POST))
+		{
+			Sign sign = (Sign)rent.SignLocation.getBlock().getState();
+			
+			if(evict)
+			{
+				for(int i = 0; i < 4; ++i)
+				{
+					String line = RegionSigns.config.evictedSign[i];
+					line = line.replaceAll("<region>", rent.Region);
+					line = line.replaceAll("<user>", rent.Tenant.getName());
+					
+					sign.setLine(i, line);
+				}
+			}
+			else
+			{
+				for(int i = 0; i < 4; ++i)
+				{
+					String line = RegionSigns.config.unclaimedSign[i];
+					line = line.replaceAll("<region>", rent.Region);
+					
+					sign.setLine(i, line);
+				}
+			}
+			
+			sign.update(true);
+		}
 	}
 }

@@ -49,6 +49,8 @@ public class Config extends AutoConfig
 	/// Management Signs
 	@ConfigField(name="unclaimed-sign-format",category="general",comment="The format of the sign after the region has been unclaimed.\nYou can use the <region> tag to indicate the region name")
 	public String[] unclaimedSign = {"<region>","Unclaimed","Waiting for","reset"};
+	@ConfigField(name="evicted-sign-format",category="general",comment="The format of the sign after the tenant of a region has been evicted.\nYou can use the <region> tag to indicate the region name, <user> which is replaced with the tenants name.")
+	public String[] evictedSign = {"<user>","has been","evicted.","<region>"};
 	
 	/// Messages
 	@ConfigField(name="prefix",category="rent.messages", comment="This is the prefix of all messages")
