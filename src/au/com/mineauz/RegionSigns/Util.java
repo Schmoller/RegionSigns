@@ -1,8 +1,5 @@
 package au.com.mineauz.RegionSigns;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,14 +8,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 import com.sk89q.worldguard.protection.databases.ProtectionDatabaseException;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -468,7 +461,6 @@ public class Util
 		
 		return false;
 	}
-	@SuppressWarnings( "unchecked" )
 	public static boolean saveRegionManager(World world)
 	{
 		try
@@ -478,33 +470,9 @@ public class Util
 				return false;
 			
 			manager.save();
-			
-			YamlConfiguration worldFlags = new YamlConfiguration();
-			boolean any = false;
-			for(ProtectedRegion region : manager.getRegions().values())
-			{
-				ConfigurationSection section = worldFlags.getConfigurationSection(region.getId());
-				
-				for(Entry<Flag<?>,Object> flag : region.getFlags().entrySet())
-				{
-					if(!arrayHas(DefaultFlag.getFlags(), flag.getKey()))
-					{
-						section.set(flag.getKey().getName(), ((Flag<Object>)flag.getKey()).marshal(flag.getValue()));
-						any = true;
-					}
-				}
-			}
-			
-			if(any)
-			{
-				File saveFile = new File(RegionSigns.instance.getDataFolder(), world.getName() + "/extraflags.yml");
-				saveFile.getParentFile().mkdirs();
-				worldFlags.save(saveFile);
-			}
 			return true;
 		}
 		catch( ProtectionDatabaseException e ) {}
-		catch ( IOException e ) {}
 		
 		return false;
 	}
