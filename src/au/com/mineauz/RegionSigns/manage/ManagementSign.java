@@ -197,6 +197,14 @@ public class ManagementSign implements Listener
 			// Not a sign
 			return;
 		
+		if(event.getPlayer().isConversing())
+			// Possibly already in the menu
+			return;
+		
+		// Stop block placing. Not cancelled on left click so you can break it
+		if(event.getAction() == Action.RIGHT_CLICK_BLOCK)
+			event.setCancelled(true);
+		
 		Sign clickedBlock = (Sign)event.getClickedBlock().getState();
 
 		if(!matchesSign(clickedBlock.getLines()))

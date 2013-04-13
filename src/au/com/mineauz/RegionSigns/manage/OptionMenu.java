@@ -26,10 +26,10 @@ public class OptionMenu extends StringPrompt implements ISubMenu
 			addOption("Allow Interactions", new FlagSetter(DefaultFlag.USE, "Enable other player interactions with doors, buttons, plates, etc.?"));
 		
 		if(player.hasPermission("regionsigns.flags.greeting"))
-			addOption("Change the greeting message", new FlagSetter(DefaultFlag.GREET_MESSAGE, "Enter the new message. Enter 'back' to cancel."));
+			addOption("Change the greeting message", new FlagSetter(DefaultFlag.GREET_MESSAGE, "Enter the new message. Enter 'back' to cancel. Enter 'clear' to remove the greeting."));
 		
 		if(player.hasPermission("regionsigns.flags.farewell"))
-			addOption("Change the farewell message", new FlagSetter(DefaultFlag.FAREWELL_MESSAGE, "Enter the new message. Enter 'back' to cancel."));
+			addOption("Change the farewell message", new FlagSetter(DefaultFlag.FAREWELL_MESSAGE, "Enter the new message. Enter 'back' to cancel. Enter 'clear' to remove the farewell."));
 	}
 	
 	@Override
@@ -73,11 +73,16 @@ public class OptionMenu extends StringPrompt implements ISubMenu
 	{
 		String output = "What would you like to do? (enter the number)\n";
 		
-		int index = 1;
-		for(Option option : mOptions)
+		if(mOptions.size() == 0)
+			output += ChatColor.YELLOW + "There are no options available.\n";
+		else
 		{
-			output += ChatColor.YELLOW + "" + index + ": " + ChatColor.WHITE + option.name + "\n";
-			++index;
+			int index = 1;
+			for(Option option : mOptions)
+			{
+				output += ChatColor.YELLOW + "" + index + ": " + ChatColor.WHITE + option.name + "\n";
+				++index;
+			}
 		}
 		output += ChatColor.YELLOW + "0: " + ChatColor.WHITE + "Back\n";
 		return output;

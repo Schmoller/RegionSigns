@@ -42,7 +42,11 @@ public class FlagSetter extends ValidatingPrompt implements ISubMenu
 	{
 		ProtectedRegion region = (ProtectedRegion)context.getSessionData("region");
 		
-		if(mFlag instanceof StateFlag)
+		if(input.equalsIgnoreCase("clear"))
+		{
+			region.setFlag(mFlag, null);
+		}
+		else if(mFlag instanceof StateFlag)
 		{
 			StateFlag flag = (StateFlag)mFlag;
 			try
