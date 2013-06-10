@@ -112,13 +112,13 @@ public class TransferCommand implements ICommand
 		{
 			Player currentTenant, newTenant;
 			
-			currentTenant = regionStatus.Tenant.getPlayer();
+			currentTenant = Bukkit.getPlayerExact(regionStatus.Tenant);
 			newTenant = Bukkit.getPlayerExact(newOwner);
 			
 			// Check that they are online
 			if(currentTenant == null || !currentTenant.isOnline())
 			{
-				sender.sendMessage(ChatColor.RED + regionStatus.Tenant.getName() + " is not online. They must be online to transfer their tenantship.");
+				sender.sendMessage(ChatColor.RED + regionStatus.Tenant + " is not online. They must be online to transfer their tenantship.");
 				return true;
 			}
 			if(newTenant == null || !newTenant.isOnline())

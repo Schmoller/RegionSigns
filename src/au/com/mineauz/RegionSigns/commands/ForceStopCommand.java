@@ -141,9 +141,16 @@ public class ForceStopCommand implements ICommand
 			msg.EventCompletionTime = 0;
 			msg.Region = regionStatus.Region;
 			msg.Payment = 0;
+			
+			RentMessage msg2 = new RentMessage();
+			msg2.Type = RentMessageTypes.RentEndedLandlord;
+			msg2.EventCompletionTime = 0;
+			msg2.Region = regionStatus.Region;
+			msg2.Payment = 0;
 
-			RentManager.instance.sendMessage(msg,regionStatus.Tenant);
-			sender.sendMessage(ChatColor.GREEN + regionStatus.Tenant.getName() + " finished renting '" + regionStatus.Region + "' and has been removed from it");
+			RentManager.instance.sendMessage(msg,Bukkit.getOfflinePlayer(regionStatus.Tenant));
+			RentManager.instance.sendMessageToLandlords(msg2, regionStatus);
+			sender.sendMessage(ChatColor.GREEN + regionStatus.Tenant + " finished renting '" + regionStatus.Region + "' and has been removed from it");
 			
 			// Update the sign
 			if(regionStatus.SignLocation != null && (regionStatus.SignLocation.getBlock().getType() == Material.WALL_SIGN || regionStatus.SignLocation.getBlock().getType() == Material.SIGN_POST))

@@ -3,11 +3,15 @@ package au.com.mineauz.RegionSigns.commands;
 import java.util.Calendar;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+
+import au.com.mineauz.RegionSigns.Region;
 import au.com.mineauz.RegionSigns.RegionSigns;
 import au.com.mineauz.RegionSigns.Util;
 import au.com.mineauz.RegionSigns.rent.RentManager;
@@ -125,7 +129,7 @@ public class StopCommand implements ICommand
 				if(sender instanceof Player && ((Player)sender).equals(regionStatus.Tenant))
 					sender.sendMessage(ChatColor.RED + "You cannot stop renting this region yet. You are required to rent for at least " + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
 				else
-					sender.sendMessage(ChatColor.RED + regionStatus.Tenant.getName() + " cannot stop renting this region yet. They are required to rent for at least " + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
+					sender.sendMessage(ChatColor.RED + regionStatus.Tenant + " cannot stop renting this region yet. They are required to rent for at least " + Util.formatTimeDifference(RegionSigns.config.minimumRentPeriod - (Calendar.getInstance().getTimeInMillis() - regionStatus.Date), 2, false) + " more");
 				
 				return true;
 			}
@@ -135,12 +139,31 @@ public class StopCommand implements ICommand
 				if(sender instanceof Player && ((Player)sender).equals(regionStatus.Tenant))
 					sender.sendMessage(ChatColor.RED + "You cannot stop renting this region yet. You cannot afford to pay your next rent.");
 				else
-					sender.sendMessage(ChatColor.RED + regionStatus.Tenant.getName() + " cannot stop renting this region yet. They cannot afford to pay their next rent.");
+					sender.sendMessage(ChatColor.RED + regionStatus.Tenant + " cannot stop renting this region yet. They cannot afford to pay their next rent.");
 				
 				return true;
 			}
 			
 			Util.playerSubtractMoney(regionStatus.Tenant, regionStatus.IntervalPayment);
+			
+			// Give the money to the owners
+			ProtectedRegion pRegion = new Region(Bukkit.getWorld(world), region).getProtectedRegion();
+			if(pRegion.getOwners().size() > 0 && regionStatus.IntervalPayment > 0)
+			{
+				double amountEach = regionStatus.IntervalPayment / pRegion.getOwners().size();
+				
+				for(String playerName : pRegion.getOwners().getPlayers())
+				{
+					Util.playerAddMoney(Bukkit.getOfflinePlayer(playerName), amountEach);
+					RentMessage paymentReceived = new RentMessage();
+					paymentReceived.Type = RentMessageTypes.PaymentReceived;
+					paymentReceived.EventCompletionTime = 0;
+					paymentReceived.Region = region;
+					paymentReceived.Payment = amountEach;
+					
+					RentManager.instance.sendMessage(paymentReceived, Bukkit.getOfflinePlayer(playerName));
+				}
+			}
 			
 			// They are required to pay their next rent and will be removed from the lot at the next rent interval
 			RentMessage msg = new RentMessage();
@@ -149,10 +172,17 @@ public class StopCommand implements ICommand
 			msg.Region = regionStatus.Region;
 			msg.Payment = regionStatus.IntervalPayment;
 			
-			regionStatus.PendingRemoval = true;
-			RentManager.instance.sendMessage(msg, regionStatus.Tenant);
+			RentMessage msg2 = new RentMessage();
+			msg2.Type = RentMessageTypes.RentEndingLandlord;
+			msg2.EventCompletionTime = regionStatus.NextIntervalEnd;
+			msg2.Region = regionStatus.Region;
+			msg2.Payment = regionStatus.IntervalPayment;
 			
-			sender.sendMessage(ChatColor.GREEN + regionStatus.Tenant.getName() + " ended renting '" + regionStatus.Region + "'. They will be removed once their rent period is up");
+			regionStatus.PendingRemoval = true;
+			RentManager.instance.sendMessage(msg, Bukkit.getOfflinePlayer(regionStatus.Tenant));
+			RentManager.instance.sendMessageToLandlords(msg2, regionStatus);
+			
+			sender.sendMessage(ChatColor.GREEN + regionStatus.Tenant + " ended renting '" + regionStatus.Region + "'. They will be removed once their rent period is up");
 		}
 		
 		return true;

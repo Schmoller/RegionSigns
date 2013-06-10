@@ -20,6 +20,9 @@ import au.com.mineauz.RegionSigns.events.RegionClaimEvent;
 import au.com.mineauz.RegionSigns.events.RegionUnclaimEvent;
 import au.com.mineauz.RegionSigns.events.SaleSignCreateEvent;
 import au.com.mineauz.RegionSigns.events.SaleSignDestroyEvent;
+import au.com.mineauz.RegionSigns.manage.ManagementMenu;
+import au.com.mineauz.RegionSigns.rent.RentManager;
+import au.com.mineauz.RegionSigns.rent.RentStatus;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
@@ -293,7 +296,31 @@ public class SaleSign extends InteractableSign
 		
 		Reason reason = canUserClaim(state.getRegion(), player, state.getPrice());
 		
-		if(reason != Reason.Ok)
+		if(reason == Reason.Owner && player.hasPermission("regionsigns.use.manage"))
+		{
+			if(player.isConversing())
+				// Possibly already in the menu
+				return;
+			
+			DefaultDomain applicableGroup;
+			
+			RentStatus status = RentManager.instance.getStatus(new Region(block.getWorld(), state.getRegion().getId()));
+			
+			if(status != null)
+				applicableGroup = state.getRegion().getMembers();
+			else
+				applicableGroup = state.getRegion().getOwners();
+			
+			// See if this player can use the sign
+			if(!applicableGroup.contains(player.getName()) && !player.hasPermission("regionsigns.use.manage.others"))
+				return;
+			
+			// Do conversation
+			ManagementMenu menu = new ManagementMenu(state.getRegion(), block.getLocation(), player, status, true);
+			menu.show();
+			return;
+		}
+		else if(reason != Reason.Ok)
 		{
 			player.sendMessage(ChatColor.RED + getDisplayMessage(reason));
 			return;
@@ -352,7 +379,7 @@ public class SaleSign extends InteractableSign
 	}
 	
 	@Override
-	protected void onSignCreated( InteractableSignState instance )
+	protected void onSignCreated( InteractableSignState instance, Player creator )
 	{
 		SaleSignState state = (SaleSignState)instance;
 		

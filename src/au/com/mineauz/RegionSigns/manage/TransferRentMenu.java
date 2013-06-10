@@ -38,13 +38,13 @@ public class TransferRentMenu extends ValidatingPrompt implements ISubMenu
 		
 		final Player currentTenant, newTenant;
 		
-		currentTenant = status.Tenant.getPlayer();
+		currentTenant = Bukkit.getPlayerExact(status.Tenant);
 		newTenant = Bukkit.getPlayerExact(input);
 		
 		// Check that they are online
 		if(currentTenant == null || !currentTenant.isOnline())
 		{
-			player.sendMessage(ChatColor.RED + status.Tenant.getName() + " is not online. They must be online to transfer their tenantship.");
+			player.sendMessage(ChatColor.RED + status.Tenant + " is not online. They must be online to transfer their tenantship.");
 			return mParent;
 		}
 		if(newTenant == null || !newTenant.isOnline())

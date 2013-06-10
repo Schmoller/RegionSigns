@@ -91,9 +91,9 @@ public class RentTransferConfirmation
 					}
 					
 					// Transfer the actual region
-					region.getMembers().removePlayer(rent.Tenant.getName());
+					region.getMembers().removePlayer(rent.Tenant);
 					region.getMembers().addPlayer(newTenant.getName());
-					rent.Tenant = newTenant;
+					rent.Tenant = newTenant.getName();
 					
 					// Attempt to save
 					if(!Util.saveRegionManager(world))

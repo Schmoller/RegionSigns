@@ -1,6 +1,7 @@
 package au.com.mineauz.RegionSigns.rent;
 
 import java.util.Calendar;
+import java.util.HashSet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -8,6 +9,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import au.com.mineauz.RegionSigns.Confirmation;
 import au.com.mineauz.RegionSigns.InteractableSign;
@@ -93,12 +98,36 @@ public class RentSign extends InteractableSign
 						mPlayer.sendMessage(ChatColor.RED + "Unable to rent region. Insufficient Funds.");
 						return;
 					}
+					
+					// Give the money to the owners
+					if(mState.getRegion().getOwners().size() > 0 && newPayment > 0)
+					{
+						double amountEach = newPayment / mState.getRegion().getOwners().size();
+						
+						for(String playerName : mState.getRegion().getOwners().getPlayers())
+						{
+							Util.playerAddMoney(Bukkit.getOfflinePlayer(playerName), amountEach);
+							RentMessage paymentReceived = new RentMessage();
+							paymentReceived.Type = RentMessageTypes.PaymentReceived;
+							paymentReceived.EventCompletionTime = 0;
+							paymentReceived.Region = mState.getRegion().getId();
+							paymentReceived.Payment = newPayment;
+							
+							RentManager.instance.sendMessage(paymentReceived, Bukkit.getOfflinePlayer(playerName));
+						}
+					}
 				
 					RentMessage beginMessage = new RentMessage();
 					beginMessage.Region = mState.getRegion().getId();
 					beginMessage.Payment = newPayment;
 					beginMessage.EventCompletionTime = 0;
 					beginMessage.Type = (newPayment > 0 ? RentMessageTypes.RentBegin : RentMessageTypes.RentBeginFree);
+					
+					RentMessage beginMessage2 = new RentMessage();
+					beginMessage2.Region = mState.getRegion().getId();
+					beginMessage2.Payment = newPayment;
+					beginMessage2.EventCompletionTime = 0;
+					beginMessage2.Type = RentMessageTypes.RentBeginLandlord;
 					
 					RentMessage firstPaymentMessage = new RentMessage();
 					firstPaymentMessage.Region = mState.getRegion().getId();
@@ -128,7 +157,7 @@ public class RentSign extends InteractableSign
 					RentStatus status = new RentStatus();
 					status.Region = mState.getRegion().getId();
 					status.World = mState.getLocation().getWorld().getName();
-					status.Tenant = mPlayer;
+					status.Tenant = mPlayer.getName();
 					status.IntervalPayment = mState.getIntervalPrice();
 					status.RentInterval = mState.getIntervalLength();
 					status.NextIntervalEnd = Calendar.getInstance().getTimeInMillis() + mState.getIntervalLength();
@@ -137,6 +166,8 @@ public class RentSign extends InteractableSign
 					status.SignLocation = mState.getLocation();
 
 					RentManager.instance.pushRent(status, status.NextIntervalEnd);
+					
+					RentManager.instance.sendMessageToLandlords(beginMessage2, status);
 					
 					// Add the player to the 
 					mState.getRegion().getMembers().addPlayer(mPlayer.getName());
@@ -354,9 +385,110 @@ public class RentSign extends InteractableSign
 	}
 	
 	@Override
-	protected void onSignCreated( InteractableSignState instance )
+	protected void onSignCreated( InteractableSignState instance, Player creator )
 	{
 		RentSignState state = (RentSignState)instance;
+		
+		ProtectedRegion region = state.getRegion();
+		
+		for(String command : RegionSigns.config.rentRegionSettings)
+		{
+			if(command.trim().isEmpty())
+				continue;
+			
+			command = command.trim();
+			
+			if(command.contains("<parent>"))
+			{
+				RegionManager man = RegionSigns.worldGuard.getRegionManager(state.getLocation().getWorld());
+				ApplicableRegionSet regions = man.getApplicableRegions(state.getLocation());
+		
+				ProtectedRegion best = null;
+				for(ProtectedRegion parent : regions)
+				{
+					if(parent.equals(region))
+						continue;
+					
+					// Try to find the lowest in the hierarchy
+					if(best == null)
+						best = parent;
+					else
+					{
+						if(parent.getParent() != null && best.getParent() == null)
+							best = parent;
+						else if(parent.getParent() != null)
+						{
+							// Find the deepest one
+							int count1 = 0;
+							ProtectedRegion temp = parent;
+							while(temp != null)
+							{
+								temp = temp.getParent();
+								count1++;
+							}
+							
+							int count2 = 0;
+							temp = best;
+							while(temp != null)
+							{
+								temp = temp.getParent();
+								count2++;
+							}
+							
+							if(count1 > count2)
+								best = parent;
+						}
+						
+					}
+				}
+				
+				if(best == null)
+					continue;
+				
+				command = command.replaceAll("<parent>", best.getId());
+			}
+			
+			command = command.replaceAll("<creator>", creator.getName());
+			command = command.replaceAll("<region>", region.getId());
+			
+			HashSet<String> toCall = new HashSet<String>();
+			if(command.contains("<owner>"))
+			{
+				for(String owner : region.getOwners().getPlayers())
+					toCall.add(command.replaceAll("<owner>", owner));
+			}
+			else
+				toCall.add(command);
+
+			for(String cmd : toCall)
+			{
+				if(cmd.startsWith("/"))
+				{
+					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd.substring(1));
+				}
+				else
+				{
+					String[] parts = cmd.split(" ");
+					
+					String newCommand = "region ";
+					
+					if(parts[0].equalsIgnoreCase("flag") || parts[0].equalsIgnoreCase("parent") || parts[0].equalsIgnoreCase("priority"))
+					{
+						newCommand += parts[0] + " " + state.getRegion().getId() + " -w " + state.getLocation().getWorld().getName();
+						
+						for(int i = 1; i < parts.length; ++i)
+							newCommand += " " + parts[i];
+						
+						Bukkit.dispatchCommand(Bukkit.getConsoleSender(), newCommand);
+					}
+					else
+					{
+						creator.sendMessage(ChatColor.RED + "[Region Setup] Failed to do command " + cmd + ". " + parts[0] + " cannot be used here");
+						break;
+					}
+				}
+			}
+		}
 		
 		RentSignCreateEvent event = new RentSignCreateEvent(state.getRegion(), state.getLocation().clone(), state.getInitialPrice(), state.getIntervalPrice(), state.getIntervalLength());
 		

@@ -1,5 +1,6 @@
 package au.com.mineauz.RegionSigns.manage;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Sign;
@@ -29,7 +30,7 @@ public class ForceStopRentingMenu extends ValidatingPrompt implements ISubMenu
 		Player player = ((Player)context.getForWhom());
 		RentStatus status = (RentStatus)context.getSessionData("status");
 		
-		if(status.Tenant.getName().equals(player.getName()))
+		if(status.Tenant.equals(player.getName()))
 			return "Do you want to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "?\nYou will no longer be able to access anything in the region. (Enter yes or no)";
 		else
 			return "Do you want to force " + ChatColor.YELLOW + Util.makeNameList(region.getMembers().getPlayers()) + ChatColor.WHITE + " to stop renting " + ChatColor.YELLOW + region.getId() + ChatColor.WHITE + "? (Enter yes or no)";
@@ -56,7 +57,7 @@ public class ForceStopRentingMenu extends ValidatingPrompt implements ISubMenu
 		boolean isOwner = false;
 		Player player = ((Player)context.getForWhom());
 		
-		isOwner = status.Tenant.getName().equals(player.getName());
+		isOwner = status.Tenant.equals(player.getName());
 		
 		if(!isOwner && !player.hasPermission("regionsigns.rent.forcestop.others"))
 		{
@@ -75,9 +76,16 @@ public class ForceStopRentingMenu extends ValidatingPrompt implements ISubMenu
 		msg.EventCompletionTime = 0;
 		msg.Region = status.Region;
 		msg.Payment = 0;
+		
+		RentMessage msg2 = new RentMessage();
+		msg2.Type = RentMessageTypes.RentEndedLandlord;
+		msg2.EventCompletionTime = 0;
+		msg2.Region = status.Region;
+		msg2.Payment = 0;
 
-		RentManager.instance.sendMessage(msg,status.Tenant);
-		player.sendMessage(ChatColor.GREEN + status.Tenant.getName() + " finished renting '" + status.Region + "' and has been removed from it");
+		RentManager.instance.sendMessage(msg,Bukkit.getOfflinePlayer(status.Tenant));
+		RentManager.instance.sendMessageToLandlords(msg2,status);
+		player.sendMessage(ChatColor.GREEN + status.Tenant + " finished renting '" + status.Region + "' and has been removed from it");
 		
 		// Update the sign
 		if(status.SignLocation != null && (status.SignLocation.getBlock().getType() == Material.WALL_SIGN || status.SignLocation.getBlock().getType() == Material.SIGN_POST))

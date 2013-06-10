@@ -21,6 +21,8 @@ import au.com.mineauz.RegionSigns.events.RegionClaimEvent;
 
 import com.earth2me.essentials.api.Economy;
 import com.earth2me.essentials.api.UserDoesNotExistException;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class ClaimSign extends InteractableSign 
@@ -307,13 +309,101 @@ public class ClaimSign extends InteractableSign
 	}
 	
 	@Override
-	protected void onSignCreated( InteractableSignState instance )
+	protected void onSignCreated( InteractableSignState instance, Player creator )
 	{
 		ClaimSignState state = (ClaimSignState)instance;
+		
+		ProtectedRegion region = state.getRegion();
+		
+		for(String command : RegionSigns.config.claimRegionSettings)
+		{
+			if(command.trim().isEmpty())
+				continue;
+			
+			command = command.trim();
+			if(command.contains("<parent>"))
+			{
+				RegionManager man = RegionSigns.worldGuard.getRegionManager(state.getLocation().getWorld());
+				ApplicableRegionSet regions = man.getApplicableRegions(state.getLocation());
+		
+				ProtectedRegion best = null;
+				for(ProtectedRegion parent : regions)
+				{
+					if(parent.equals(region))
+						continue;
+					
+					// Try to find the lowest in the hierarchy
+					if(best == null)
+						best = parent;
+					else
+					{
+						if(parent.getParent() != null && best.getParent() == null)
+							best = parent;
+						else if(parent.getParent() != null)
+						{
+							// Find the deepest one
+							int count1 = 0;
+							ProtectedRegion temp = parent;
+							while(temp != null)
+							{
+								temp = temp.getParent();
+								count1++;
+							}
+							
+							int count2 = 0;
+							temp = best;
+							while(temp != null)
+							{
+								temp = temp.getParent();
+								count2++;
+							}
+							
+							if(count1 > count2)
+								best = parent;
+						}
+						
+					}
+				}
+				
+				if(best == null)
+					continue;
+				
+				command = command.replaceAll("<parent>", best.getId());
+			}
+			
+			command = command.replaceAll("<creator>", creator.getName());
+			command = command.replaceAll("<region>", region.getId());
+			
+			if(command.startsWith("/"))
+			{
+				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.substring(1));
+			}
+			else
+			{
+				String[] parts = command.split(" ");
+				
+				String newCommand = "region ";
+				
+				if(parts[0].equalsIgnoreCase("flag") || parts[0].equalsIgnoreCase("parent") || parts[0].equalsIgnoreCase("priority"))
+				{
+					newCommand += parts[0] + " " + state.getRegion().getId() + " -w " + state.getLocation().getWorld().getName();
+					
+					for(int i = 1; i < parts.length; ++i)
+						newCommand += " " + parts[i];
+					
+					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), newCommand);
+				}
+				else
+					creator.sendMessage(ChatColor.RED + "[Region Setup] Failed to do command " + command + ". " + parts[0] + " cannot be used here");
+			}
+		}
+		
 		
 		ClaimSignCreateEvent event = new ClaimSignCreateEvent(state.getRegion(), state.getLocation().clone(), state.getPrice());
 		
 		Bukkit.getPluginManager().callEvent(event);
+		
+		
 	}
 	
 	@Override

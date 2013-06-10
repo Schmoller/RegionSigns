@@ -27,13 +27,15 @@ public class ManagementMenu implements ConversationAbandonedListener
 	private Player mPlayer;
 	private RentStatus mStatus;
 	private Location mSignLocation;
+	private boolean mIsForSale;
 	
-	public ManagementMenu(ProtectedRegion region, Location signLocation, Player player, RentStatus status)
+	public ManagementMenu(ProtectedRegion region, Location signLocation, Player player, RentStatus status, boolean forSale)
 	{
 		mRegion = region;
 		mPlayer = player;
 		mStatus = status;
 		mSignLocation = signLocation;
+		mIsForSale = forSale;
 	}
 	
 	public void show()
@@ -52,7 +54,10 @@ public class ManagementMenu implements ConversationAbandonedListener
 		if(mStatus == null)
 		{
 			prompt.addOption("Unclaim Lot", new UnclaimMenu());
-			prompt.addOption("Sell Lot", new SellMenu());
+			if(mIsForSale)
+				prompt.addOption("Stop Selling Lot", new UnSellMenu());
+			else
+				prompt.addOption("Sell Lot", new SellMenu());
 		}
 		else
 		{

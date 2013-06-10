@@ -30,7 +30,7 @@ public abstract class InteractableSign
 	// Allows you to alter the text on the sign afterwards
 	protected abstract void replaceInvalidSign(InteractableSignState instance, String[] lines);
 	
-	protected abstract void onSignCreated(InteractableSignState state);
+	protected abstract void onSignCreated(InteractableSignState state, Player creator );
 	
 	protected abstract void onSignDestroyed(InteractableSignState state);
 	
@@ -94,7 +94,7 @@ public abstract class InteractableSign
 			for(int i = 0; i < 3; ++i)
 				event.setLine(i+1,newLines[i]);
 						
-			onSignCreated(state);
+			onSignCreated(state, event.getPlayer());
 		}
 	}
 	private boolean processBlockBreak(BlockBreakEvent event)
@@ -205,13 +205,13 @@ public abstract class InteractableSign
 			Bukkit.getPluginManager().registerEvents(this, RegionSigns.instance);
 		}
 		
-		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 		private void onSignChange(SignChangeEvent event)
 		{
 			processSignChanged(event);
 		}
 		
-		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 		private void onBlockBreak(BlockBreakEvent event)
 		{
 			processBlockBreak(event);

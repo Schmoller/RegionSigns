@@ -117,7 +117,7 @@ public class ManagementSign implements Listener
 		return values[0];
 	}
 	
-	private void displayStatus(Player player, ProtectedRegion region, DefaultDomain owners, RentStatus status)
+	public static void displayStatus(Player player, ProtectedRegion region, DefaultDomain owners, RentStatus status)
 	{
 		ArrayList<String> messages = new ArrayList<String>();
 		
@@ -143,10 +143,10 @@ public class ManagementSign implements Listener
 		
 		if(status != null)
 		{
-			if(status.Tenant.getName().equals(player.getName()))
+			if(status.Tenant.equals(player.getName()))
 				messages.add("  Main Tenant: " + ChatColor.YELLOW + "You");
 			else
-				messages.add("  Main Tenant: " + ChatColor.YELLOW + status.Tenant.getName());
+				messages.add("  Main Tenant: " + ChatColor.YELLOW + status.Tenant);
 			
 			String rentStatus =    "  Status: ";
 			
@@ -252,7 +252,7 @@ public class ManagementSign implements Listener
 		else
 		{
 			// Do conversation
-			ManagementMenu menu = new ManagementMenu(region, clickedBlock.getLocation(), event.getPlayer(), status);
+			ManagementMenu menu = new ManagementMenu(region, clickedBlock.getLocation(), event.getPlayer(), status, false);
 			menu.show();
 		}
 	}

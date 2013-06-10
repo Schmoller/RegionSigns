@@ -111,7 +111,7 @@ public class ListCommand implements ICommand
 			// get all the results
 			for(RentStatus status : RentManager.instance.getRenters())
 			{
-				results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant.getName()));
+				results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant));
 			}
 		}
 		// Only regions that the calling player rents
@@ -127,7 +127,7 @@ public class ListCommand implements ICommand
 			for(RentStatus status : RentManager.instance.getRenters())
 			{
 				if(status.Tenant.equals((Player)sender))
-						results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant.getName()));
+					results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant));
 			}
 		}
 		else if(mode.startsWith("."))
@@ -145,7 +145,7 @@ public class ListCommand implements ICommand
 			for(RentStatus status : RentManager.instance.getRenters())
 			{
 				if(status.Tenant.equals(player))
-						results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant.getName()));
+					results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant));
 			}
 		}
 		

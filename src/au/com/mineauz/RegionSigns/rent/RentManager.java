@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -124,6 +125,16 @@ public class RentManager implements Listener
 		}
 	}
 	
+	public void sendMessageToLandlords(RentMessage message, RentStatus status)
+	{
+		ProtectedRegion region = new Region(Bukkit.getWorld(status.World), status.Region).getProtectedRegion();
+		if(region == null)
+			return;
+		
+		for(String owner : region.getOwners().getPlayers())
+			sendMessage(message, Bukkit.getOfflinePlayer(owner));
+	}
+	
 	private String getDisplayMessage(RentMessage msg)
 	{
 		String message = RegionSigns.config.messagePrefix;
@@ -165,10 +176,25 @@ public class RentManager implements Listener
 		case RentBeginFree:
 			message += RegionSigns.config.messageBeginRentingFree;
 			break;
+		case PaymentReceived:
+			message += RegionSigns.config.messagePaymentReceived;
+			break;
+		case EvictionLandlord:
+			message += RegionSigns.config.messageTenantEvicted;
+			break;
+		case RentEndedLandlord:
+			message += RegionSigns.config.messageTenantFinished;
+			break;
+		case RentEndingLandlord:
+			message += RegionSigns.config.messageTenantTerminate;
+			break;
+		case RentBeginLandlord:
+			message += RegionSigns.config.messageTenantBegin;
+			break;
 		}
 		
 		// Replace the colour tags
-		message = message.replace("&", "§");
+		message = ChatColor.translateAlternateColorCodes('&', message);
 
 		// Now replace all tags
 		message = message.replace("<region>", msg.Region);
@@ -215,7 +241,7 @@ public class RentManager implements Listener
 		for(int i = 0; i < keys.size(); i++)
 		{
 			RentStatus status = new RentStatus();
-			status.Tenant = Bukkit.getOfflinePlayer(section.getString(keys.get(i) + ".tenant"));
+			status.Tenant = section.getString(keys.get(i) + ".tenant");
 			status.Region = section.getString(keys.get(i) + ".region");
 			status.World = section.getString(keys.get(i) + ".world");
 			status.PendingEviction = section.getBoolean(keys.get(i) + ".evict");
@@ -318,7 +344,7 @@ public class RentManager implements Listener
 			
 			RentStatus rent = new RentStatus();
 			
-			rent.Tenant = section.getOfflinePlayer("tenant");
+			rent.Tenant = section.getString("tenant");
 			rent.Region = section.getString("region");
 			rent.World = section.getString("world");
 			rent.PendingEviction = section.getBoolean("evict");

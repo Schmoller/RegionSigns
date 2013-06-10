@@ -120,7 +120,7 @@ public class InfoCommand implements ICommand
 		else
 		{
 			sender.sendMessage("Rent Status for region '" + regionStatus.Region + "'");
-			sender.sendMessage("  Tenant:          " + regionStatus.Tenant.getName());
+			sender.sendMessage("  Tenant:          " + regionStatus.Tenant);
 			String status =    "  Status:          ";
 			
 			if(regionStatus.PendingEviction)

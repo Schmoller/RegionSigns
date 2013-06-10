@@ -377,12 +377,35 @@ public class Util
 			return false;
 		}
 	}
+	public static boolean playerHasEnough(String player, double amount)
+	{
+		try
+		{
+			return Economy.hasEnough(player, amount);
+		}
+		catch(UserDoesNotExistException e)
+		{
+			return false;
+		}
+	}
 	
 	public static boolean playerSubtractMoney(OfflinePlayer player, double amount)
 	{
 		try
 		{
 			Economy.subtract(player.getName(), amount);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	public static boolean playerSubtractMoney(String player, double amount)
+	{
+		try
+		{
+			Economy.subtract(player, amount);
 			return true;
 		}
 		catch(Exception e)
@@ -404,17 +427,19 @@ public class Util
 		}
 	}
 	
-	public static double getPlayerMoney(OfflinePlayer player)
+	public static double getPlayerMoney(String player)
 	{
 		try
 		{
-			return Economy.getMoney(player.getName());
+			return Economy.getMoney(player);
 		}
 		catch(Exception e)
 		{
 			return 0;
 		}
 	}
+	
+	
 	
 	public static ProtectedRegion getRegion(World world, String regionName)
 	{
