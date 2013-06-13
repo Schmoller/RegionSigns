@@ -345,6 +345,11 @@ public class RentManager implements Listener
 			RentStatus rent = new RentStatus();
 			
 			rent.Tenant = section.getString("tenant");
+			
+			// Fix a mistake i made
+			if(rent.Tenant.startsWith("CraftOfflinePlayer") || rent.Tenant.startsWith("CraftPlayer"))
+				rent.Tenant = rent.Tenant.substring(rent.Tenant.indexOf('=')+1, rent.Tenant.length()-1);
+			
 			rent.Region = section.getString("region");
 			rent.World = section.getString("world");
 			rent.PendingEviction = section.getBoolean("evict");

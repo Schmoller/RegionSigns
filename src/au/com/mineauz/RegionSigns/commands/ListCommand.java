@@ -3,9 +3,7 @@ package au.com.mineauz.RegionSigns.commands;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -126,7 +124,7 @@ public class ListCommand implements ICommand
 			// get all the results
 			for(RentStatus status : RentManager.instance.getRenters())
 			{
-				if(status.Tenant.equals((Player)sender))
+				if(status.Tenant.equals(((Player)sender).getName()))
 					results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant));
 			}
 		}
@@ -138,13 +136,11 @@ public class ListCommand implements ICommand
 				return true;
 			}
 			
-			OfflinePlayer player = Bukkit.getOfflinePlayer(mode.substring(1));
-			
 			// get all the results
 			
 			for(RentStatus status : RentManager.instance.getRenters())
 			{
-				if(status.Tenant.equals(player))
+				if(status.Tenant.equals(mode.substring(1)))
 					results.add(String.format("%-30s[%s] %s", status.Region,status.World, status.Tenant));
 			}
 		}

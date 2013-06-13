@@ -1,4 +1,4 @@
-RegionSigns 1.5
+RegionSigns 1.5.1
 =================
 
 RegionSigns is a bukkit plugin that allows players to easily claim and rent regions provided by WorldGuard.
